@@ -1,0 +1,340 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Login - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos do login */
+    .login-container {
+        display: flex;
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(26, 42, 58, 0.15);
+        overflow: hidden;
+    }
+
+    .login-left {
+        width: 50%;
+        padding: 50px 60px;
+        background: linear-gradient(145deg, #1a2a3a 0%, #243b4f 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .login-left h1 {
+        font-size: 44px;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .login-left h1 span {
+        color: #8ab4d6;
+    }
+
+    .login-left h2 {
+        font-size: 16px;
+        color: rgba(255,255,255,0.6);
+        font-weight: 400;
+        margin-bottom: 50px;
+        max-width: 320px;
+    }
+
+    .login-left .features {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .login-left .feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .login-left .feature-line {
+        width: 3px;
+        height: 28px;
+        background: linear-gradient(to bottom, #8ab4d6, #4a7a9c);
+        border-radius: 4px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .login-left .feature-text {
+        font-size: 15px;
+        color: rgba(255,255,255,0.85);
+        line-height: 1.5;
+    }
+
+    .login-right {
+        width: 50%;
+        padding: 50px 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .login-box h2 {
+        font-size: 28px;
+        color: #1a2a3a;
+        margin-bottom: 4px;
+    }
+
+    .login-box p {
+        color: #8899aa;
+        margin-bottom: 35px;
+        font-size: 14px;
+    }
+
+    .login-box .form-group {
+        margin-bottom: 20px;
+    }
+
+    .login-box .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: #1a2a3a;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .login-box .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+
+    .login-box .form-group input:focus {
+        border-color: #4a7a9c;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(74, 122, 156, 0.1);
+    }
+
+    .login-box .form-group input.error {
+        border-color: #e74c5e;
+    }
+
+    .login-box .error-message {
+        color: #e74c5e;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .login-box .error-message.show {
+        display: block;
+    }
+
+    .login-box .btn-login {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .login-box .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(26, 42, 58, 0.25);
+    }
+
+    .login-box .options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        font-size: 13px;
+    }
+
+    .login-box .options label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #4a5a6a;
+        cursor: pointer;
+    }
+
+    .login-box .options a {
+        color: #4a7a9c;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-box .options a:hover {
+        color: #1a2a3a;
+    }
+
+    .login-box .register-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #8899aa;
+        font-size: 13px;
+    }
+
+    .login-box .register-link a {
+        color: #4a7a9c;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .login-box .register-link a:hover {
+        color: #1a2a3a;
+    }
+
+    @media(max-width: 768px) {
+        .login-container {
+            flex-direction: column;
+            border-radius: 0;
+        }
+        .login-left, .login-right {
+            width: 100%;
+            padding: 30px;
+        }
+        .login-left {
+            min-height: 40vh;
+        }
+        .login-left h1 { font-size: 32px; }
+        .login-left h2 { font-size: 14px; margin-bottom: 30px; }
+        .login-right { min-height: 50vh; }
+    }
+
+    @media(max-width: 480px) {
+        .login-left, .login-right { padding: 24px; }
+        .login-left h1 { font-size: 26px; }
+        .login-box h2 { font-size: 22px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-left">
+        <h1>SIOE<span>.</span></h1>
+        <h2>Sistema Inteligente de Organização de Estudos</h2>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Organize suas matérias de forma eficiente</div>
+            </div>
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Crie metas de estudo realistas</div>
+            </div>
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Acompanhe seu desempenho em tempo real</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-box">
+            <h2>Bem-vindo</h2>
+            <p>Acesse sua rotina de estudos</p>
+
+            <form method="POST" action="{% url 'core:login' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_username">E-mail</label>
+                    {{ form.username }}
+                    <div class="error-message" id="email-error">E-mail inválido</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password">Senha</label>
+                    {{ form.password }}
+                    <div class="error-message" id="password-error">Senha inválida</div>
+                </div>
+
+                <div class="options">
+                    <label><input type="checkbox" id="remember" name="remember"> Lembrar de mim</label>
+                    <a href="#">Esqueceu a senha?</a>
+                </div>
+
+                <button class="btn-login" type="submit">Entrar</button>
+            </form>
+
+            <div class="register-link">
+                Não possui conta? <a href="{% url 'core:cadastro' %}">Criar conta agora</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Validação do formulário de login
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const username = document.getElementById('id_username');
+        const password = document.getElementById('id_password');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Validar e-mail
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!username.value.trim() || !emailRegex.test(username.value.trim())) {
+                emailError.classList.add('show');
+                username.classList.add('error');
+                isValid = false;
+            } else {
+                emailError.classList.remove('show');
+                username.classList.remove('error');
+            }
+
+            // Validar senha
+            if (!password.value.trim() || password.value.trim().length < 6) {
+                passwordError.classList.add('show');
+                password.classList.add('error');
+                isValid = false;
+            } else {
+                passwordError.classList.remove('show');
+                password.classList.remove('error');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        username.addEventListener('input', function() {
+            emailError.classList.remove('show');
+            this.classList.remove('error');
+        });
+
+        password.addEventListener('input', function() {
+            passwordError.classList.remove('show');
+            this.classList.remove('error');
+        });
+    });
+</script>
+{% endblock %}

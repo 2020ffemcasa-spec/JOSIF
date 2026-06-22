@@ -1,0 +1,524 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Matérias - SIOE{% endblock %}
+
+{% block content %}
+<div class="materias">
+    <div class="topbar">
+        <h2>📚 <span>Matérias</span></h2>
+        <button class="btn-add" onclick="document.getElementById('modal').style.display='flex';">+ Nova Matéria</button>
+    </div>
+
+    <!-- Lista de matérias -->
+    <div class="subjects" id="subjectsList">
+        {% if materias %}
+            {% for materia in materias %}
+            <div class="subject-card" data-index="{{ forloop.counter0 }}">
+                <div class="card-bar" style="background:{{ materia.get_progresso_color }}"></div>
+                <div class="subject-header">
+                    <h3>{{ materia.emoji }} {{ materia.nome }}</h3>
+                    <span class="priority {{ materia.prioridade }}">{{ materia.get_prioridade_label }}</span>
+                </div>
+                {% if materia.professor %}
+                <div class="info">👨‍🏫 <span class="label">Professor:</span> {{ materia.professor }}</div>
+                {% endif %}
+                {% if materia.topicos %}
+                <div class="info">📖 <span class="label">Tópicos:</span> {{ materia.topicos }}</div>
+                {% endif %}
+                {% if materia.carga_horaria %}
+                <div class="info">⏱️ <span class="label">Carga horária:</span> {{ materia.carga_horaria }}h/semana</div>
+                {% endif %}
+                <div class="progress-box">
+                    <div class="progress-top">
+                        <span>Progresso</span>
+                        <span class="percent">{{ materia.progresso }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div style="width:{{ materia.progresso }}%;background:{{ materia.get_progresso_color }}"></div>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-edit" onclick="editMateria({{ materia.id }}, '{{ materia.nome }}', '{{ materia.professor|default:'' }}', '{{ materia.topicos|default:'' }}', {{ materia.carga_horaria }}, '{{ materia.prioridade }}', {{ materia.progresso }})">✏️ Editar</button>
+                    <button class="btn btn-delete" onclick="deleteMateria({{ materia.id }})">🗑️ Excluir</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">📚</span>
+                <h3>Nenhuma matéria cadastrada</h3>
+                <p>Comece adicionando suas primeiras matérias para organizar seus estudos.</p>
+                <button class="btn-start" onclick="document.getElementById('modal').style.display='flex';">➕ Adicionar Matéria</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Nova Matéria -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h3>📚 Nova Matéria</h3>
+        <form method="POST" action="{% url 'core:materias' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_nome">Nome da Matéria *</label>
+                {{ form.nome }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_professor">Professor</label>
+                {{ form.professor }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_topicos">Tópicos</label>
+                {{ form.topicos }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_carga_horaria">Carga Horária (h/semana)</label>
+                {{ form.carga_horaria }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_prioridade">Prioridade</label>
+                {{ form.prioridade }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_progresso">Progresso (%)</label>
+                {{ form.progresso }}
+            </div>
+
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-save">💾 Salvar</button>
+                <button type="button" class="btn btn-cancel" onclick="document.getElementById('modal').style.display='none';">✖ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .materias .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .materias .topbar h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+
+    .materias .topbar h2 span {
+        color: #4a7a9c;
+    }
+
+    .materias .btn-add {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 13px 26px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.15);
+    }
+
+    .materias .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(26, 42, 58, 0.25);
+    }
+
+    .materias .subjects {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+    }
+
+    .materias .subject-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px 26px;
+        box-shadow: 0 4px 20px rgba(26, 42, 58, 0.06);
+        transition: all 0.35s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(26, 42, 58, 0.04);
+    }
+
+    .materias .subject-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(26, 42, 58, 0.10);
+    }
+
+    .materias .subject-card .card-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .materias .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 18px;
+        padding-top: 4px;
+    }
+
+    .materias .subject-header h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+
+    .materias .priority {
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+    }
+
+    .materias .priority.high { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .materias .priority.medium { background: linear-gradient(135deg, #ca8a04, #eab308); }
+    .materias .priority.low { background: linear-gradient(135deg, #16a34a, #22c55e); }
+
+    .materias .info {
+        margin-bottom: 10px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .materias .info .label {
+        font-weight: 500;
+        color: #475569;
+    }
+
+    .materias .progress-box {
+        margin-top: 18px;
+    }
+
+    .materias .progress-top {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1a2a3a;
+    }
+
+    .materias .progress-top .percent {
+        color: #4a7a9c;
+        font-weight: 600;
+    }
+
+    .materias .progress {
+        width: 100%;
+        height: 8px;
+        background: #e8edf3;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .materias .progress div {
+        height: 100%;
+        border-radius: 20px;
+        transition: width 1s ease;
+    }
+
+    .materias .buttons {
+        margin-top: 22px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .materias .btn {
+        flex: 1;
+        padding: 11px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .materias .btn-edit {
+        background: #eef2ff;
+        color: #4a7a9c;
+    }
+
+    .materias .btn-edit:hover {
+        background: #dbeafe;
+        transform: translateY(-2px);
+    }
+
+    .materias .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .materias .btn-delete:hover {
+        background: #fee2e2;
+        transform: translateY(-2px);
+    }
+
+    .materias .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 30px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(26, 42, 58, 0.06);
+        border: 1px solid rgba(26, 42, 58, 0.04);
+    }
+
+    .materias .empty-state .empty-icon {
+        font-size: 56px;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .materias .empty-state h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a2a3a;
+        margin-bottom: 8px;
+    }
+
+    .materias .empty-state p {
+        font-size: 15px;
+        color: #8899aa;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .materias .empty-state .btn-start {
+        margin-top: 20px;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .materias .empty-state .btn-start:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(26, 42, 58, 0.25);
+    }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 26, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 20px 60px rgba(15, 26, 42, 0.2);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a2a3a;
+        margin-bottom: 28px;
+    }
+
+    .modal .form-group {
+        margin-bottom: 18px;
+    }
+
+    .modal .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #1a2a3a;
+        font-size: 13px;
+    }
+
+    .modal .form-group input,
+    .modal .form-group select,
+    .modal .form-group textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+
+    .modal .form-group input:focus,
+    .modal .form-group select:focus,
+    .modal .form-group textarea:focus {
+        border-color: #4a7a9c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(74, 122, 156, 0.1);
+    }
+
+    .modal .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .modal-buttons .btn {
+        padding: 13px;
+        font-size: 14px;
+        flex: 1;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(26, 42, 58, 0.25);
+    }
+
+    .btn-cancel {
+        background: #f1f4f9;
+        color: #64748b;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
+    }
+
+    @media(max-width: 800px) {
+        .materias .subjects {
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .materias .subject-card { padding: 20px 18px; }
+        .materias .subject-header h3 { font-size: 19px; }
+        .materias .topbar h2 { font-size: 22px; }
+        .materias .btn-add { padding: 11px 20px; font-size: 13px; }
+    }
+
+    @media(max-width: 550px) {
+        .materias .subjects { grid-template-columns: 1fr; }
+        .materias .topbar { flex-direction: column; align-items: flex-start; }
+        .materias .btn-add { width: 100%; text-align: center; }
+        .modal { padding: 28px 24px; }
+        .modal h3 { font-size: 20px; }
+        .modal-buttons { flex-direction: column; }
+    }
+</style>
+
+<script>
+    function deleteMateria(id) {
+        if (confirm('⚠️ Tem certeza que deseja excluir esta matéria?')) {
+            window.location.href = "{% url 'core:materia_delete' 0 %}".replace('0', id);
+        }
+    }
+
+    function editMateria(id, nome, professor, topicos, carga_horaria, prioridade, progresso) {
+        const novoNome = prompt('✏️ Editar nome da matéria:', nome);
+        if (novoNome && novoNome.trim()) {
+            // Enviar via AJAX
+            fetch("{% url 'core:materia_edit' 0 %}".replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    nome: novoNome.trim(),
+                    professor: professor,
+                    topicos: topicos,
+                    carga_horaria: carga_horaria,
+                    prioridade: prioridade,
+                    progresso: progresso
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao editar matéria.');
+                }
+            });
+        }
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modal').style.display = 'none';
+        }
+    });
+
+    // Fechar modal clicando fora
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

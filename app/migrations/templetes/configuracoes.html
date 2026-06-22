@@ -1,0 +1,1166 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Configurações - SIOE{% endblock %}
+
+{% block content %}
+<div class="configuracoes">
+    <div class="topbar">
+        <h2>⚙️ <span>Configurações</span></h2>
+        <button class="btn-save-all" onclick="salvarTudo()">💾 Salvar Tudo</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="config-tabs">
+        <button class="config-tab active" onclick="switchTab('perfil', this)">👤 Perfil</button>
+        <button class="config-tab" onclick="switchTab('aparencia', this)">🎨 Aparência</button>
+        <button class="config-tab" onclick="switchTab('notificacoes', this)">🔔 Notificações</button>
+        <button class="config-tab" onclick="switchTab('estudo', this)">📚 Estudo</button>
+        <button class="config-tab" onclick="switchTab('privacidade', this)">🔒 Privacidade</button>
+        <button class="config-tab" onclick="switchTab('sobre', this)">ℹ️ Sobre</button>
+    </div>
+
+    <!-- SEÇÃO: Perfil -->
+    <div class="config-section active" id="sec-perfil">
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>👤 Informações do Perfil</h3>
+                    <p>Gerencie suas informações pessoais</p>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <div class="avatar">
+                    <span id="avatarInitials">{{ user_initials|default:"U" }}</span>
+                    <div class="avatar-edit" onclick="alert('📷 Alterar foto (em desenvolvimento)')">📷</div>
+                </div>
+                <div class="avatar-info">
+                    <h4 id="profileNameDisplay">{{ user.get_full_name|default:user.username }}</h4>
+                    <p id="profileEmailDisplay">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'core:configuracoes' %}" id="configForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_nome">Nome Completo</label>
+                    <input type="text" class="form-input" id="id_nome" name="nome_completo" value="{{ user.get_full_name|default:user.username }}" placeholder="Seu nome completo">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_telefone">Telefone</label>
+                        {{ perfil_form.telefone }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_data_nascimento">Data de Nascimento</label>
+                        {{ perfil_form.data_nascimento }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_instituicao">Instituição de Ensino</label>
+                    {{ perfil_form.instituicao }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_serie">Série / Ano</label>
+                        {{ perfil_form.serie }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_objetivo">Objetivo Principal</label>
+                        {{ perfil_form.objetivo }}
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">💾 Salvar Perfil</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alterar Senha -->
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🔑 Alterar Senha</h3>
+                    <p>Atualize sua senha de acesso</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Senha Atual</label>
+                <input type="password" class="form-input" placeholder="Digite sua senha atual">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nova Senha</label>
+                    <input type="password" class="form-input" placeholder="Mínimo 8 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Nova Senha</label>
+                    <input type="password" class="form-input" placeholder="Repita a nova senha">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="alert('✅ Senha alterada com sucesso!')">🔑 Alterar Senha</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: Aparência -->
+    <div class="config-section" id="sec-aparencia">
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🎨 Tema</h3>
+                    <p>Escolha o tema visual do sistema</p>
+                </div>
+            </div>
+
+            <div class="theme-options">
+                <div class="theme-option theme-light active" onclick="selectTheme(this)">
+                    <div class="theme-preview"></div>
+                    <span>☀️ Claro</span>
+                </div>
+                <div class="theme-option theme-dark" onclick="selectTheme(this)">
+                    <div class="theme-preview"></div>
+                    <span>🌙 Escuro</span>
+                </div>
+                <div class="theme-option theme-blue" onclick="selectTheme(this)">
+                    <div class="theme-preview"></div>
+                    <span>🔵 Azul</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🎨 Cor Primária</h3>
+                    <p>Escolha a cor de destaque do sistema</p>
+                </div>
+            </div>
+
+            <div class="color-options">
+                <div class="color-option active" style="background:#2563eb" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#7c3aed" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#16a34a" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#ea580c" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#e11d48" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#0891b2" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#d97706" onclick="selectColor(this)"></div>
+                <div class="color-option" style="background:#334155" onclick="selectColor(this)"></div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🔤 Tipografia e Layout</h3>
+                    <p>Ajuste o tamanho de fonte e densidade do layout</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tamanho da Fonte</label>
+                    <select class="form-input">
+                        <option>Pequeno</option>
+                        <option selected>Médio</option>
+                        <option>Grande</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Densidade do Layout</label>
+                    <select class="form-input">
+                        <option>Compacto</option>
+                        <option selected>Confortável</option>
+                        <option>Espaçoso</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: Notificações -->
+    <div class="config-section" id="sec-notificacoes">
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🔔 Notificações Gerais</h3>
+                    <p>Configure como deseja receber alertas</p>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Notificações por E-mail</h4>
+                    <p>Receba resumos e alertas no seu e-mail</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Notificações Push</h4>
+                    <p>Receba notificações no navegador</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Sons de Notificação</h4>
+                    <p>Reproduzir sons ao receber alertas</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>📅 Lembretes de Estudo</h3>
+                    <p>Configure lembretes automáticos</p>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Lembrete Diário de Estudo</h4>
+                    <p>Receba um lembrete para estudar todos os dias</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Alerta de Metas Atrasadas</h4>
+                    <p>Seja notificado quando uma meta estiver atrasada</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Resumo Semanal</h4>
+                    <p>Receba um relatório semanal do seu progresso</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Lembrete Antes das Atividades</h4>
+                    <p>Receba um aviso 15 minutos antes de cada atividade</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="form-group" style="margin-top: 16px">
+                <label>⏰ Horário do Lembrete Diário</label>
+                <input type="time" class="form-input" value="07:30" style="max-width: 200px">
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: Estudo -->
+    <div class="config-section" id="sec-estudo">
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>⏱️ Preferências de Estudo</h3>
+                    <p>Configure suas preferências de sessão de estudo</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tempo de Foco (minutos)</label>
+                    <input type="number" class="form-input" value="50" min="15" max="120">
+                    <div class="hint">💡 Técnica Pomodoro recomenda 25 minutos</div>
+                </div>
+                <div class="form-group">
+                    <label>Intervalo Curto (minutos)</label>
+                    <input type="number" class="form-input" value="10" min="5" max="30">
+                    <div class="hint">☕ Pausa entre sessões de foco</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Intervalo Longo (minutos)</label>
+                    <input type="number" class="form-input" value="30" min="15" max="60">
+                    <div class="hint">🍽️ Pausa após 4 sessões de foco</div>
+                </div>
+                <div class="form-group">
+                    <label>Meta Diária de Horas</label>
+                    <input type="number" class="form-input" value="5" min="1" max="16">
+                    <div class="hint">🎯 Horas de estudo por dia</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>📅 Dias de Estudo</h3>
+                    <p>Selecione os dias que você estuda</p>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Segunda-feira</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Terça-feira</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Quarta-feira</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Quinta-feira</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Sexta-feira</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Sábado</h4></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Domingo</h4></div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🎯 Priorização Inteligente</h3>
+                    <p>Configure como o sistema organiza suas matérias</p>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Priorizar Matérias com Menor Progresso</h4>
+                    <p>O sistema sugere estudar primeiro matérias com menos avanço</p>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Alternar Matérias Automaticamente</h4>
+                    <p>Evita estudar a mesma matéria muitas vezes seguidas</p>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Considerar Dificuldade da Matéria</h4>
+                    <p>Distribui matérias difíceis nos horários de maior concentração</p>
+                </div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: Privacidade -->
+    <div class="config-section" id="sec-privacidade">
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>🔒 Privacidade e Dados</h3>
+                    <p>Gerencie seus dados e preferências de privacidade</p>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Perfil Público</h4>
+                    <p>Permitir que outros estudantes vejam seu perfil</p>
+                </div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Mostrar Progresso no Ranking</h4>
+                    <p>Exibir seu progresso no ranking de estudantes</p>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Coleta de Dados de Uso</h4>
+                    <p>Ajude a melhorar o SIOE compartilhando dados anônimos</p>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>📦 Exportar Dados</h3>
+                    <p>Baixe uma cópia de todos os seus dados</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="alert('📥 Exportando dados... Você receberá um e-mail com o link de download.')">📥 Exportar Meus Dados</button>
+            </div>
+        </div>
+
+        <!-- Zona de Perigo -->
+        <div class="danger-zone">
+            <h3>⚠️ Zona de Perigo</h3>
+            <p>Ações irreversíveis. Prossiga com cautela.</p>
+
+            <div class="danger-item">
+                <div class="danger-item-info">
+                    <h4>🗑️ Limpar Todos os Dados</h4>
+                    <p>Remove todo o histórico de estudo e progresso</p>
+                </div>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Limpar</button>
+            </div>
+
+            <div class="danger-item">
+                <div class="danger-item-info">
+                    <h4>❌ Excluir Conta</h4>
+                    <p>Remove permanentemente sua conta e todos os dados</p>
+                </div>
+                <button class="btn btn-danger" onclick="deleteAccount()">❌ Excluir Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: Sobre -->
+    <div class="config-section" id="sec-sobre">
+        <div class="config-card about-card">
+            <div class="about-logo">SIOE</div>
+            <div class="about-version">Versão 1.0.0 · Build 2026.05</div>
+            <p class="about-description">
+                O <strong>Sistema Inteligente de Organização de Estudos</strong> foi criado para ajudar estudantes a organizar suas matérias, cronogramas e metas de estudo de forma eficiente e intuitiva.
+            </p>
+            <div class="about-links">
+                <a href="#" class="about-link" onclick="alert('📖 Em desenvolvimento')">📖 Documentação</a>
+                <a href="#" class="about-link" onclick="alert('💬 Em desenvolvimento')">💬 Suporte</a>
+                <a href="#" class="about-link" onclick="alert('🐛 Em desenvolvimento')">🐛 Reportar Bug</a>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="config-card-header">
+                <div>
+                    <h3>📋 Informações do Sistema</h3>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Versão</h4></div>
+                <span style="color:#64748b; font-weight:600">1.0.0</span>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Última Atualização</h4></div>
+                <span style="color:#64748b; font-weight:600">12/05/2026</span>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Tecnologias</h4></div>
+                <span style="color:#64748b; font-weight:600">Django, SQLite, HTML, CSS, JS</span>
+            </div>
+            <div class="toggle-group">
+                <div class="toggle-info"><h4>Licença</h4></div>
+                <span style="color:#64748b; font-weight:600">MIT</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .configuracoes .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .configuracoes .topbar h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+
+    .configuracoes .topbar h2 span {
+        color: #4a7a9c;
+    }
+
+    .configuracoes .btn-save-all {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 13px 26px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.15);
+    }
+
+    .configuracoes .btn-save-all:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(26, 42, 58, 0.25);
+    }
+
+    .configuracoes .config-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.06);
+        border: 1px solid rgba(26, 42, 58, 0.04);
+    }
+
+    .configuracoes .config-tab {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .configuracoes .config-tab:hover {
+        background: #f0f4f9;
+        color: #1a2a3a;
+    }
+
+    .configuracoes .config-tab.active {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(26, 42, 58, 0.2);
+    }
+
+    .configuracoes .config-section {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .configuracoes .config-section.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .configuracoes .config-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px 30px;
+        box-shadow: 0 4px 20px rgba(26, 42, 58, 0.06);
+        border: 1px solid rgba(26, 42, 58, 0.04);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .configuracoes .config-card:hover {
+        box-shadow: 0 8px 30px rgba(26, 42, 58, 0.08);
+    }
+
+    .configuracoes .config-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f4f9;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .configuracoes .config-card-header h3 {
+        font-size: 19px;
+        font-weight: 700;
+        color: #1a2a3a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .configuracoes .config-card-header p {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    .configuracoes .form-group {
+        margin-bottom: 20px;
+    }
+
+    .configuracoes .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #1a2a3a;
+        font-size: 14px;
+    }
+
+    .configuracoes .form-group .hint {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 5px;
+    }
+
+    .configuracoes .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+
+    .configuracoes .form-input:focus {
+        border-color: #4a7a9c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(74, 122, 156, 0.1);
+    }
+
+    .configuracoes .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .configuracoes .profile-section {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+
+    .configuracoes .avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a2a3a, #4a7a9c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 38px;
+        color: white;
+        font-weight: 700;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .configuracoes .avatar-edit {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 32px;
+        height: 32px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 12px rgba(26, 42, 58, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: 2px solid #f0f4f9;
+    }
+
+    .configuracoes .avatar-edit:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.2);
+    }
+
+    .configuracoes .avatar-info h4 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a2a3a;
+        margin-bottom: 2px;
+    }
+
+    .configuracoes .avatar-info p {
+        font-size: 14px;
+        color: #94a3b8;
+    }
+
+    .configuracoes .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #f0f4f9;
+        gap: 16px;
+    }
+
+    .configuracoes .toggle-group:last-child {
+        border-bottom: none;
+    }
+
+    .configuracoes .toggle-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a2a3a;
+        margin-bottom: 2px;
+    }
+
+    .configuracoes .toggle-info p {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    .configuracoes .toggle {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+
+    .configuracoes .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .configuracoes .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #cbd5e1;
+        border-radius: 28px;
+        transition: all 0.3s ease;
+    }
+
+    .configuracoes .toggle-slider::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        left: 4px;
+        bottom: 4px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .configuracoes .toggle input:checked + .toggle-slider {
+        background: #4a7a9c;
+    }
+
+    .configuracoes .toggle input:checked + .toggle-slider::before {
+        transform: translateX(22px);
+    }
+
+    .configuracoes .theme-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .configuracoes .theme-option {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .configuracoes .theme-option:hover {
+        border-color: #93c5fd;
+        transform: translateY(-2px);
+    }
+
+    .configuracoes .theme-option.active {
+        border-color: #4a7a9c;
+        background: #f0f7ff;
+        box-shadow: 0 4px 16px rgba(74, 122, 156, 0.1);
+    }
+
+    .configuracoes .theme-preview {
+        width: 100%;
+        height: 60px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    .configuracoes .theme-light .theme-preview {
+        background: linear-gradient(135deg, #f0f4f9, #e2e8f0);
+    }
+
+    .configuracoes .theme-dark .theme-preview {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+    }
+
+    .configuracoes .theme-blue .theme-preview {
+        background: linear-gradient(135deg, #1a2a3a, #4a7a9c);
+    }
+
+    .configuracoes .theme-option span {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a2a3a;
+    }
+
+    .configuracoes .color-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .configuracoes .color-option {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .configuracoes .color-option:hover {
+        transform: scale(1.12);
+    }
+
+    .configuracoes .color-option.active {
+        border-color: #1a2a3a;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .configuracoes .color-option.active::after {
+        content: "✓";
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .configuracoes .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+        flex-wrap: wrap;
+    }
+
+    .configuracoes .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .configuracoes .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .configuracoes .btn-primary {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.15);
+    }
+
+    .configuracoes .btn-primary:hover {
+        box-shadow: 0 8px 24px rgba(26, 42, 58, 0.25);
+    }
+
+    .configuracoes .btn-secondary {
+        background: #f1f4f9;
+        color: #64748b;
+    }
+
+    .configuracoes .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .configuracoes .btn-danger {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .configuracoes .btn-danger:hover {
+        background: #fee2e2;
+        box-shadow: 0 4px 16px rgba(220, 38, 38, 0.15);
+    }
+
+    .configuracoes .danger-zone {
+        border: 2px solid #fca5a5;
+        border-radius: 20px;
+        padding: 28px 30px;
+        background: #fef2f2;
+        margin-top: 8px;
+    }
+
+    .configuracoes .danger-zone h3 {
+        color: #dc2626;
+        margin-bottom: 6px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .configuracoes .danger-zone p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+
+    .configuracoes .danger-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #fecaca;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .configuracoes .danger-item:last-child {
+        border-bottom: none;
+    }
+
+    .configuracoes .danger-item-info h4 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a2a3a;
+        margin-bottom: 2px;
+    }
+
+    .configuracoes .danger-item-info p {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 0;
+    }
+
+    .configuracoes .about-card {
+        text-align: center;
+        padding: 40px 30px;
+    }
+
+    .configuracoes .about-logo {
+        font-size: 48px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1a2a3a 0%, #4a7a9c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+    }
+
+    .configuracoes .about-version {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-bottom: 18px;
+    }
+
+    .configuracoes .about-description {
+        font-size: 15px;
+        color: #475569;
+        line-height: 1.8;
+        max-width: 520px;
+        margin: 0 auto 25px;
+    }
+
+    .configuracoes .about-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .configuracoes .about-link {
+        font-size: 14px;
+        color: #4a7a9c;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        padding: 6px 12px;
+        border-radius: 6px;
+    }
+
+    .configuracoes .about-link:hover {
+        color: #1a2a3a;
+        background: #f0f4f9;
+    }
+
+    @media(max-width: 800px) {
+        .configuracoes .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        .configuracoes .theme-options {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .configuracoes .profile-section {
+            flex-direction: column;
+            text-align: center;
+        }
+        .configuracoes .config-card { padding: 20px; }
+        .configuracoes .config-card-header { flex-direction: column; }
+        .configuracoes .config-tabs {
+            gap: 4px;
+            padding: 6px 8px;
+        }
+        .configuracoes .config-tab {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .configuracoes .topbar h2 { font-size: 22px; }
+        .configuracoes .btn-save-all { padding: 11px 20px; font-size: 13px; }
+        .configuracoes .danger-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+
+    @media(max-width: 550px) {
+        .configuracoes .topbar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .configuracoes .topbar h2 { font-size: 20px; }
+        .configuracoes .btn-save-all { width: 100%; text-align: center; padding: 12px; }
+        .configuracoes .config-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 4px 8px;
+            gap: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .configuracoes .config-tab {
+            white-space: nowrap;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .configuracoes .color-options { gap: 8px; }
+        .configuracoes .color-option { width: 36px; height: 36px; }
+        .configuracoes .about-card { padding: 24px 16px; }
+        .configuracoes .about-logo { font-size: 36px; }
+    }
+</style>
+
+<script>
+    function switchTab(tabName, btn) {
+        document.querySelectorAll('.config-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.config-section').forEach(function(s) { s.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('sec-' + tabName).classList.add('active');
+    }
+
+    function selectTheme(el) {
+        document.querySelectorAll('.theme-option').forEach(function(t) { t.classList.remove('active'); });
+        el.classList.add('active');
+    }
+
+    function selectColor(el) {
+        document.querySelectorAll('.color-option').forEach(function(c) { c.classList.remove('active'); });
+        el.classList.add('active');
+    }
+
+    function salvarTudo() {
+        document.getElementById('configForm').submit();
+    }
+
+    function clearAllData() {
+        if (confirm('⚠️ Tem certeza que deseja limpar todos os dados de estudo? Esta ação é irreversível!')) {
+            if (confirm('⚠️ ÚLTIMO AVISO: Todos os seus dados de estudo serão perdidos. Deseja continuar?')) {
+                fetch("{% url 'core:config_salvar_tudo' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ action: 'clear_data' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('🗑️ Todos os dados de estudo foram limpos com sucesso!');
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+    }
+
+    function deleteAccount() {
+        if (confirm('⚠️ Tem certeza que deseja excluir sua conta? Esta ação é IRREVERSÍVEL!')) {
+            if (confirm('⚠️ ÚLTIMO AVISO: Todos os seus dados serão perdidos permanentemente. Deseja continuar?')) {
+                // Redirecionar para logout que limpa a sessão
+                window.location.href = "{% url 'core:logout' %}";
+            }
+        }
+    }
+</script>
+{% endblock %}

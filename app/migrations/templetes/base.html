@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIOE - {% block title %}Sistema de Estudos{% endblock %}</title>
+    <link rel="icon" href="{% static 'core/img/Logo.png' %}">
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    {% if user.is_authenticated %}
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div style="width: 100%;">
+            <div class="logo">
+                <h1>SIOE<span>.</span></h1>
+                <p>Sistema Inteligente de Organização de Estudos</p>
+            </div>
+
+            <div class="menu">
+                <a href="{% url 'core:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'core:materias' %}" class="{% if request.resolver_match.url_name == 'materias' %}active{% endif %}">
+                    <span class="icon">📚</span>
+                    <span>Matérias</span>
+                </a>
+                <a href="{% url 'core:cronogramas' %}" class="{% if request.resolver_match.url_name == 'cronogramas' %}active{% endif %}">
+                    <span class="icon">📅</span>
+                    <span>Cronograma</span>
+                </a>
+                <a href="{% url 'core:metas' %}" class="{% if request.resolver_match.url_name == 'metas' %}active{% endif %}">
+                    <span class="icon">🎯</span>
+                    <span>Metas</span>
+                </a>
+                <a href="{% url 'core:relatorios' %}" class="{% if request.resolver_match.url_name == 'relatorios' %}active{% endif %}">
+                    <span class="icon">📈</span>
+                    <span>Relatórios</span>
+                </a>
+                <a href="{% url 'core:configuracoes' %}" class="{% if request.resolver_match.url_name == 'configuracoes' %}active{% endif %}">
+                    <span class="icon">⚙️</span>
+                    <span>Configurações</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="logout" onclick="document.getElementById('logout-form').submit();">
+            🔓 Sair da Conta
+        </div>
+        <form id="logout-form" action="{% url 'core:logout' %}" method="POST" style="display: none;">
+            {% csrf_token %}
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Messages -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="{% static 'core/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

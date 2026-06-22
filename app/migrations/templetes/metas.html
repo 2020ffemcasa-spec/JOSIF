@@ -1,0 +1,605 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Metas - SIOE{% endblock %}
+
+{% block content %}
+<div class="metas">
+    <div class="topbar">
+        <h2>🎯 <span>Metas de Estudo</span></h2>
+        <button class="btn-add" onclick="document.getElementById('modal').style.display='flex';">+ Nova Meta</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+        <button class="filter-btn active" onclick="filterMetas('all', this)">📋 Todas</button>
+        <button class="filter-btn" onclick="filterMetas('on-track', this)">✅ No Caminho</button>
+        <button class="filter-btn" onclick="filterMetas('at-risk', this)">⚠️ Em Risco</button>
+        <button class="filter-btn" onclick="filterMetas('behind', this)">🔴 Atrasadas</button>
+        <button class="filter-btn" onclick="filterMetas('completed', this)">✅ Concluídas</button>
+    </div>
+
+    <!-- Lista de Metas -->
+    <div class="goals-grid" id="goalsGrid">
+        {% if metas %}
+            {% for meta in metas %}
+            <div class="goal-card" data-status="{{ meta.status }}">
+                <div class="card-bar {{ meta.status }}"></div>
+                <div class="goal-header">
+                    <h3>{{ meta.titulo }}</h3>
+                    <span class="goal-badge {{ meta.status }}">{{ meta.get_status_display }}</span>
+                </div>
+                <div class="goal-meta">
+                    <span class="goal-meta-item">📅 <strong>Prazo:</strong> {{ meta.prazo|default:"Não definido" }}</span>
+                    <span class="goal-meta-item">📊 <strong>Meta:</strong> {{ meta.meta_progresso }}%</span>
+                </div>
+                {% if meta.descricao %}
+                <p class="goal-description">{{ meta.descricao }}</p>
+                {% endif %}
+                <div class="progress-box">
+                    <div class="progress-top">
+                        <span>Progresso</span>
+                        <span class="percent">{{ meta.progresso_atual }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div style="width:{{ meta.progresso_atual }}%;background:{{ meta.get_progress_color }}"></div>
+                    </div>
+                </div>
+                <div class="goal-actions">
+                    <button class="btn btn-edit" onclick="editMeta({{ meta.id }}, '{{ meta.titulo }}')">✏️ Editar</button>
+                    <button class="btn btn-delete" onclick="deleteMeta({{ meta.id }})">🗑️ Excluir</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">🎯</span>
+                <h3>Nenhuma meta definida</h3>
+                <p>Defina suas primeiras metas de estudo para acompanhar seu progresso.</p>
+                <button class="btn-start" onclick="document.getElementById('modal').style.display='flex';">➕ Criar Meta</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Nova Meta -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h3>🎯 Nova Meta</h3>
+        <form method="POST" action="{% url 'core:metas' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_titulo">Título da Meta *</label>
+                {{ form.titulo }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_materia">Matéria</label>
+                {{ form.materia }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_descricao">Descrição</label>
+                {{ form.descricao }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_prazo">Prazo</label>
+                {{ form.prazo }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_meta_progresso">Meta de Progresso (%)</label>
+                    {{ form.meta_progresso }}
+                </div>
+                <div class="form-group">
+                    <label for="id_progresso_atual">Progresso Atual (%)</label>
+                    {{ form.progresso_atual }}
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-save">💾 Salvar</button>
+                <button type="button" class="btn btn-cancel" onclick="document.getElementById('modal').style.display='none';">✖ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .metas .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .metas .topbar h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+
+    .metas .topbar h2 span {
+        color: #4a7a9c;
+    }
+
+    .metas .btn-add {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 13px 26px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(26, 42, 58, 0.15);
+    }
+
+    .metas .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(26, 42, 58, 0.25);
+    }
+
+    .metas .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+
+    .metas .filter-btn {
+        padding: 8px 20px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 50px;
+        background: white;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .metas .filter-btn:hover {
+        border-color: #4a7a9c;
+        color: #1a2a3a;
+    }
+
+    .metas .filter-btn.active {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(26, 42, 58, 0.15);
+    }
+
+    .metas .goals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .metas .goal-card {
+        background: white;
+        border-radius: 20px;
+        padding: 26px 28px;
+        box-shadow: 0 4px 20px rgba(26, 42, 58, 0.06);
+        border: 1px solid rgba(26, 42, 58, 0.04);
+        transition: all 0.35s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metas .goal-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(26, 42, 58, 0.10);
+    }
+
+    .metas .goal-card .card-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .metas .goal-card .card-bar.on-track { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .metas .goal-card .card-bar.at-risk { background: linear-gradient(90deg, #ca8a04, #eab308); }
+    .metas .goal-card .card-bar.behind { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    .metas .goal-card .card-bar.completed { background: linear-gradient(90deg, #2563eb, #4a7a9c); }
+
+    .metas .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+        padding-top: 4px;
+    }
+
+    .metas .goal-header h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+
+    .metas .goal-badge {
+        padding: 4px 14px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+    }
+
+    .metas .goal-badge.on-track { background: linear-gradient(135deg, #16a34a, #22c55e); }
+    .metas .goal-badge.at-risk { background: linear-gradient(135deg, #ca8a04, #eab308); }
+    .metas .goal-badge.behind { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .metas .goal-badge.completed { background: linear-gradient(135deg, #2563eb, #4a7a9c); }
+
+    .metas .goal-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 24px;
+        margin-bottom: 16px;
+        padding: 12px 0;
+        border-top: 1px solid #f0f4f9;
+        border-bottom: 1px solid #f0f4f9;
+    }
+
+    .metas .goal-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .metas .goal-meta-item strong {
+        color: #1a2a3a;
+        font-weight: 600;
+    }
+
+    .metas .goal-description {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .metas .progress-box {
+        margin-top: 4px;
+    }
+
+    .metas .progress-top {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1a2a3a;
+    }
+
+    .metas .progress-top .percent {
+        color: #4a7a9c;
+        font-weight: 600;
+    }
+
+    .metas .progress {
+        width: 100%;
+        height: 8px;
+        background: #e8edf3;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .metas .progress div {
+        height: 100%;
+        border-radius: 20px;
+        transition: width 1.2s ease;
+    }
+
+    .metas .goal-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .metas .btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .metas .btn-edit {
+        background: #eef2ff;
+        color: #4a7a9c;
+    }
+
+    .metas .btn-edit:hover {
+        background: #dbeafe;
+        transform: translateY(-2px);
+    }
+
+    .metas .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .metas .btn-delete:hover {
+        background: #fee2e2;
+        transform: translateY(-2px);
+    }
+
+    .metas .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 30px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(26, 42, 58, 0.06);
+        border: 1px solid rgba(26, 42, 58, 0.04);
+    }
+
+    .metas .empty-state .empty-icon {
+        font-size: 56px;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .metas .empty-state h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a2a3a;
+        margin-bottom: 8px;
+    }
+
+    .metas .empty-state p {
+        font-size: 15px;
+        color: #8899aa;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .metas .empty-state .btn-start {
+        margin-top: 20px;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .metas .empty-state .btn-start:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(26, 42, 58, 0.25);
+    }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 26, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 20px 60px rgba(15, 26, 42, 0.2);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a2a3a;
+        margin-bottom: 28px;
+    }
+
+    .modal .form-group {
+        margin-bottom: 18px;
+    }
+
+    .modal .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #1a2a3a;
+        font-size: 13px;
+    }
+
+    .modal .form-group input,
+    .modal .form-group select,
+    .modal .form-group textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+
+    .modal .form-group input:focus,
+    .modal .form-group select:focus,
+    .modal .form-group textarea:focus {
+        border-color: #4a7a9c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(74, 122, 156, 0.1);
+    }
+
+    .modal .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .modal .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .modal-buttons .btn {
+        padding: 13px;
+        font-size: 14px;
+        flex: 1;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(26, 42, 58, 0.25);
+    }
+
+    .btn-cancel {
+        background: #f1f4f9;
+        color: #64748b;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
+    }
+
+    @media(max-width: 800px) {
+        .metas .goals-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .metas .goal-card { padding: 20px; }
+        .metas .goal-header h3 { font-size: 18px; }
+        .metas .topbar h2 { font-size: 22px; }
+        .metas .btn-add { padding: 11px 20px; font-size: 13px; }
+        .metas .filters { gap: 6px; }
+        .metas .filter-btn { padding: 6px 14px; font-size: 12px; }
+        .modal .form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    @media(max-width: 550px) {
+        .metas .topbar { flex-direction: column; align-items: flex-start; }
+        .metas .btn-add { width: 100%; text-align: center; }
+        .metas .goal-meta { gap: 10px 16px; font-size: 12px; }
+        .metas .goal-meta-item { font-size: 12px; }
+        .modal { padding: 28px 20px; }
+        .modal h3 { font-size: 20px; }
+        .modal-buttons { flex-direction: column; }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+
+<script>
+    function filterMetas(status, btn) {
+        document.querySelectorAll('.filter-btn').forEach(function(f) {
+            f.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        document.querySelectorAll('.goal-card').forEach(function(card) {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+                card.style.animation = 'fadeIn 0.3s ease';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function deleteMeta(id) {
+        if (confirm('⚠️ Tem certeza que deseja excluir esta meta?')) {
+            window.location.href = "{% url 'core:meta_delete' 0 %}".replace('0', id);
+        }
+    }
+
+    function editMeta(id, titulo) {
+        const novoTitulo = prompt('✏️ Editar título da meta:', titulo);
+        if (novoTitulo && novoTitulo.trim()) {
+            // Atualizar via AJAX
+            fetch("{% url 'core:meta_update_status' 0 %}".replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    titulo: novoTitulo.trim()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao editar meta.');
+                }
+            });
+        }
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modal').style.display = 'none';
+        }
+    });
+
+    // Fechar modal clicando fora
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

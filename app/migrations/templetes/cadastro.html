@@ -1,0 +1,377 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Cadastro - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cadastro-container {
+        display: flex;
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(26, 42, 58, 0.15);
+        overflow: hidden;
+    }
+
+    .cadastro-left {
+        width: 50%;
+        padding: 50px 60px;
+        background: linear-gradient(145deg, #1a2a3a 0%, #243b4f 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .cadastro-left h1 {
+        font-size: 44px;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .cadastro-left h1 span {
+        color: #8ab4d6;
+    }
+
+    .cadastro-left h2 {
+        font-size: 16px;
+        color: rgba(255,255,255,0.6);
+        font-weight: 400;
+        margin-bottom: 50px;
+        max-width: 320px;
+    }
+
+    .cadastro-left .features {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .cadastro-left .feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .cadastro-left .feature-line {
+        width: 3px;
+        height: 28px;
+        background: linear-gradient(to bottom, #8ab4d6, #4a7a9c);
+        border-radius: 4px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .cadastro-left .feature-text {
+        font-size: 15px;
+        color: rgba(255,255,255,0.85);
+        line-height: 1.5;
+    }
+
+    .cadastro-right {
+        width: 50%;
+        padding: 40px 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+    }
+
+    .cadastro-box {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .cadastro-box h2 {
+        font-size: 28px;
+        color: #1a2a3a;
+        margin-bottom: 4px;
+    }
+
+    .cadastro-box p {
+        color: #8899aa;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+
+    .cadastro-box .form-group {
+        margin-bottom: 16px;
+    }
+
+    .cadastro-box .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #1a2a3a;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .cadastro-box .form-group input,
+    .cadastro-box .form-group select {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+
+    .cadastro-box .form-group input:focus,
+    .cadastro-box .form-group select:focus {
+        border-color: #4a7a9c;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(74, 122, 156, 0.1);
+    }
+
+    .cadastro-box .form-group input.error {
+        border-color: #e74c5e;
+    }
+
+    .cadastro-box .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .cadastro-box .error-message {
+        color: #e74c5e;
+        font-size: 12px;
+        margin-top: 4px;
+        display: none;
+    }
+
+    .cadastro-box .error-message.show {
+        display: block;
+    }
+
+    .cadastro-box .btn-cadastro {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-top: 8px;
+    }
+
+    .cadastro-box .btn-cadastro:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(26, 42, 58, 0.25);
+    }
+
+    .cadastro-box .login-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #8899aa;
+        font-size: 13px;
+    }
+
+    .cadastro-box .login-link a {
+        color: #4a7a9c;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .cadastro-box .login-link a:hover {
+        color: #1a2a3a;
+    }
+
+    @media(max-width: 768px) {
+        .cadastro-container {
+            flex-direction: column;
+            border-radius: 0;
+        }
+        .cadastro-left, .cadastro-right {
+            width: 100%;
+            padding: 30px;
+        }
+        .cadastro-left {
+            min-height: 30vh;
+        }
+        .cadastro-left h1 { font-size: 32px; }
+        .cadastro-left h2 { font-size: 14px; margin-bottom: 30px; }
+        .cadastro-right { min-height: 60vh; }
+        .cadastro-box .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    @media(max-width: 480px) {
+        .cadastro-left, .cadastro-right { padding: 24px; }
+        .cadastro-left h1 { font-size: 26px; }
+        .cadastro-box h2 { font-size: 22px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-left">
+        <h1>SIOE<span>.</span></h1>
+        <h2>Sistema Inteligente de Organização de Estudos</h2>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Organize suas matérias de forma eficiente</div>
+            </div>
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Crie metas de estudo realistas</div>
+            </div>
+            <div class="feature">
+                <div class="feature-line"></div>
+                <div class="feature-text">Acompanhe seu desempenho em tempo real</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cadastro-right">
+        <div class="cadastro-box">
+            <h2>📝 Criar Conta</h2>
+            <p>Preencha os dados abaixo para começar</p>
+
+            <form method="POST" action="{% url 'core:cadastro' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="id_first_name">Nome Completo *</label>
+                    {{ form.first_name }}
+                    <div class="error-message" id="name-error">Nome é obrigatório</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_email">E-mail *</label>
+                    {{ form.email }}
+                    <div class="error-message" id="email-error">E-mail inválido ou já cadastrado</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_password1">Senha *</label>
+                        {{ form.password1 }}
+                        <div class="error-message" id="password1-error">Mínimo 8 caracteres</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_password2">Confirmar Senha *</label>
+                        {{ form.password2 }}
+                        <div class="error-message" id="password2-error">As senhas não coincidem</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_objetivo">Objetivo Principal</label>
+                    {{ form.objetivo }}
+                </div>
+
+                <button class="btn-cadastro" type="submit">💾 Criar Conta</button>
+            </form>
+
+            <div class="login-link">
+                Já possui conta? <a href="{% url 'core:login' %}">Faça login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const firstName = document.getElementById('id_first_name');
+        const email = document.getElementById('id_email');
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        const nameError = document.getElementById('name-error');
+        const emailError = document.getElementById('email-error');
+        const password1Error = document.getElementById('password1-error');
+        const password2Error = document.getElementById('password2-error');
+
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Validar nome
+            if (!firstName.value.trim() || firstName.value.trim().length < 2) {
+                nameError.classList.add('show');
+                firstName.classList.add('error');
+                isValid = false;
+            } else {
+                nameError.classList.remove('show');
+                firstName.classList.remove('error');
+            }
+
+            // Validar e-mail
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
+                emailError.classList.add('show');
+                email.classList.add('error');
+                isValid = false;
+            } else {
+                emailError.classList.remove('show');
+                email.classList.remove('error');
+            }
+
+            // Validar senha
+            if (!password1.value.trim() || password1.value.trim().length < 8) {
+                password1Error.classList.add('show');
+                password1.classList.add('error');
+                isValid = false;
+            } else {
+                password1Error.classList.remove('show');
+                password1.classList.remove('error');
+            }
+
+            // Validar confirmação
+            if (password1.value.trim() !== password2.value.trim()) {
+                password2Error.classList.add('show');
+                password2.classList.add('error');
+                isValid = false;
+            } else {
+                password2Error.classList.remove('show');
+                password2.classList.remove('error');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Remover erros ao digitar
+        firstName.addEventListener('input', function() {
+            nameError.classList.remove('show');
+            this.classList.remove('error');
+        });
+
+        email.addEventListener('input', function() {
+            emailError.classList.remove('show');
+            this.classList.remove('error');
+        });
+
+        password1.addEventListener('input', function() {
+            password1Error.classList.remove('show');
+            this.classList.remove('error');
+            if (password2.value.trim() && password1.value.trim() === password2.value.trim()) {
+                password2Error.classList.remove('show');
+                password2.classList.remove('error');
+            }
+        });
+
+        password2.addEventListener('input', function() {
+            password2Error.classList.remove('show');
+            this.classList.remove('error');
+        });
+    });
+</script>
+{% endblock %}
