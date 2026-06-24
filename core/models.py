@@ -24,6 +24,7 @@ class Perfil(models.Model):
     instituicao = models.CharField('Instituicao de Ensino', max_length=200, blank=True, null=True)
     serie = models.CharField('Serie', max_length=20, choices=SERIE_CHOICES, blank=True, null=True)
     objetivo = models.CharField('Objetivo', max_length=20, choices=OBJETIVO_CHOICES, default='ENEM')
+    avatar = models.ImageField('Avatar', upload_to='avatars/', blank=True, null=True)
     data_cadastro = models.DateTimeField('Data de Cadastro', auto_now_add=True)
     
     def __str__(self):
@@ -146,6 +147,7 @@ class Meta(models.Model):
 class Configuracao(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='configuracao')
     tema = models.CharField('Tema', max_length=20, default='light')
+    cor_primaria = models.CharField('Cor Primaria', max_length=20, default='#2563eb')
     notificacoes_email = models.BooleanField('Notificacoes por E-mail', default=True)
     notificacoes_push = models.BooleanField('Notificacoes Push', default=True)
     lembrete_diario = models.BooleanField('Lembrete Diario', default=True)
@@ -153,7 +155,6 @@ class Configuracao(models.Model):
     
     def __str__(self):
         return f'Configuracao de {self.usuario.username}'
-
 
 class RegistroEstudo(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='registros_estudo')

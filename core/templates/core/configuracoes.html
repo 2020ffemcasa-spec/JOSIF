@@ -3,11 +3,437 @@
 {% block title %}Configurações - SIOE{% endblock %}
 
 {% block content %}
+<style>
+    .config-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
+    }
+    .config-tab {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .config-tab:hover { background: #f0f4f9; color: #1a2a3a; }
+    .config-tab.active {
+        background: {{ config.cor_primaria|default:'#2563eb' }};
+        color: white;
+        box-shadow: 0 4px 12px rgba(26,42,58,0.2);
+    }
+    .config-section {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+    .config-section.active { display: block; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .config-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+    .config-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+    .config-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f0f4f9;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .config-card-header h3 {
+        font-size: 19px;
+        font-weight: 700;
+        color: #1a2a3a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .config-card-header p {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 400;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #1a2a3a;
+        font-size: 14px;
+    }
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #f8fafc;
+        color: #1a2a3a;
+    }
+    .form-input:focus {
+        border-color: {{ config.cor_primaria|default:'#2563eb' }};
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    .profile-section {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+    .avatar-container {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .avatar-container .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a2a3a, {{ config.cor_primaria|default:'#2563eb' }});
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 38px;
+        color: white;
+        font-weight: 700;
+    }
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 32px;
+        height: 32px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: 2px solid #f0f4f9;
+        color: #1a2a3a;
+        text-decoration: none;
+    }
+    .avatar-edit-btn:hover { transform: scale(1.1); }
+
+    .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #f0f4f9;
+        gap: 16px;
+    }
+    .toggle-group:last-child { border-bottom: none; }
+    .toggle-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a2a3a;
+        margin-bottom: 2px;
+    }
+    .toggle-info p {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+    .toggle {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+    .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #cbd5e1;
+        border-radius: 28px;
+        transition: all 0.3s ease;
+    }
+    .toggle-slider::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        left: 4px;
+        bottom: 4px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .toggle input:checked + .toggle-slider { background: {{ config.cor_primaria|default:'#2563eb' }}; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+    .theme-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    .theme-option {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .theme-option:hover { border-color: {{ config.cor_primaria|default:'#2563eb' }}; transform: translateY(-2px); }
+    .theme-option.active {
+        border-color: {{ config.cor_primaria|default:'#2563eb' }};
+        background: rgba(37,99,235,0.1);
+        box-shadow: 0 4px 16px rgba(37,99,235,0.1);
+    }
+    .theme-preview {
+        width: 100%;
+        height: 60px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    .theme-light .theme-preview { background: linear-gradient(135deg, #f0f4f9, #e2e8f0); border: 1px solid #e2e8f0; }
+    .theme-dark .theme-preview { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #1e293b; }
+    .theme-blue .theme-preview { background: linear-gradient(135deg, #1a2a3a, {{ config.cor_primaria|default:'#2563eb' }}); border: 1px solid {{ config.cor_primaria|default:'#2563eb' }}; }
+    .theme-option span { font-size: 14px; font-weight: 600; color: #1a2a3a; }
+
+    .color-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .color-option {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .color-option:hover { transform: scale(1.12); }
+    .color-option.active {
+        border-color: #1a2a3a !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+    }
+    .color-option.active::after {
+        content: "✓";
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+        background: {{ config.cor_primaria|default:'#2563eb' }};
+        color: white;
+        box-shadow: 0 4px 16px rgba(26,42,58,0.15);
+    }
+    .btn-primary:hover { box-shadow: 0 8px 24px rgba(26,42,58,0.25); }
+    .btn-secondary { background: #f1f4f9; color: #64748b; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-danger { background: #fef2f2; color: #dc2626; }
+    .btn-danger:hover { background: #fee2e2; box-shadow: 0 4px 16px rgba(220,38,38,0.15); }
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+        flex-wrap: wrap;
+    }
+
+    .danger-zone {
+        border: 2px solid #fca5a5;
+        border-radius: 20px;
+        padding: 28px 30px;
+        background: #fef2f2;
+        margin-top: 8px;
+    }
+    .danger-zone h3 {
+        color: #dc2626;
+        margin-bottom: 6px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .danger-zone p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+    .danger-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #fecaca;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .danger-item:last-child { border-bottom: none; }
+    .danger-item-info h4 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a2a3a;
+        margin-bottom: 2px;
+    }
+    .danger-item-info p {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 0;
+    }
+
+    .about-card {
+        text-align: center;
+        padding: 40px 30px;
+    }
+    .about-logo {
+        font-size: 48px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1a2a3a 0%, {{ config.cor_primaria|default:'#2563eb' }} 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+    }
+    .about-version {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-bottom: 18px;
+    }
+    .about-description {
+        font-size: 15px;
+        color: #475569;
+        line-height: 1.8;
+        max-width: 520px;
+        margin: 0 auto 25px;
+    }
+    .about-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .about-link {
+        font-size: 14px;
+        color: {{ config.cor_primaria|default:'#2563eb' }};
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        padding: 6px 12px;
+        border-radius: 6px;
+    }
+    .about-link:hover {
+        color: #1a2a3a;
+        background: #f0f4f9;
+    }
+
+    .theme-preview-demo {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    #fotoInput { display: none; }
+    .cor-salva-info {
+        font-size: 12px;
+        color: {{ config.cor_primaria|default:'#2563eb' }};
+        font-weight: 600;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: rgba(37,99,235,0.1);
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    @media(max-width: 800px) {
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+        .theme-options { grid-template-columns: 1fr; gap: 12px; }
+        .profile-section { flex-direction: column; text-align: center; }
+        .config-card { padding: 20px; }
+        .config-card-header { flex-direction: column; }
+        .config-tabs { gap: 4px; padding: 6px 8px; }
+        .config-tab { padding: 6px 12px; font-size: 12px; }
+        .danger-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+    @media(max-width: 550px) {
+        .color-options { gap: 8px; }
+        .color-option { width: 36px; height: 36px; }
+        .about-card { padding: 24px 16px; }
+        .about-logo { font-size: 36px; }
+        .config-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 4px 8px;
+            gap: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .config-tab { white-space: nowrap; padding: 6px 12px; font-size: 12px; }
+    }
+</style>
+
 <div style="display:flex; min-height:90vh;">
     <!-- Sidebar -->
     <div style="width:260px; background:linear-gradient(180deg,#0f1a2a,#1a2a3a); color:white; padding:30px 20px; border-radius:16px; margin-right:30px; flex-shrink:0;">
         <div style="margin-bottom:40px;">
-            <h1 style="font-size:36px;">SIOE<span style="color:#8ab4d6;">.</span></h1>
+            <h1 style="font-size:36px;">SIOE<span style="color:{{ config.cor_primaria|default:'#2563eb' }};">.</span></h1>
             <p style="font-size:13px; color:rgba(255,255,255,0.5);">Sistema de Organização de Estudos</p>
         </div>
         <div style="display:flex; flex-direction:column; gap:4px;">
@@ -26,77 +452,323 @@
     <!-- Conteúdo -->
     <div style="flex:1;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-            <h2 style="font-size:28px;">⚙️ <span style="color:#4a7a9c;">Configurações</span></h2>
-            <button onclick="alert('✅ Todas as configurações foram salvas!')" style="background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer;">💾 Salvar Tudo</button>
+            <h2 style="font-size:28px;">⚙️ <span style="color:{{ config.cor_primaria|default:'#2563eb' }};">Configurações</span></h2>
+            <button onclick="salvarTudo()" class="btn" style="background:{{ config.cor_primaria|default:'#2563eb' }}; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer;">💾 Salvar Tudo</button>
         </div>
 
         <!-- Tabs -->
-        <div style="display:flex; gap:8px; margin-bottom:25px; flex-wrap:wrap; background:white; padding:8px 12px; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; font-weight:500; cursor:pointer;">👤 Perfil</button>
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🎨 Aparência</button>
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🔔 Notificações</button>
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">📚 Estudo</button>
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🔒 Privacidade</button>
-            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">ℹ️ Sobre</button>
+        <div class="config-tabs">
+            <button class="config-tab active" onclick="switchTab('perfil', this)">👤 Perfil</button>
+            <button class="config-tab" onclick="switchTab('aparencia', this)">🎨 Aparência</button>
+            <button class="config-tab" onclick="switchTab('notificacoes', this)">🔔 Notificações</button>
+            <button class="config-tab" onclick="switchTab('estudo', this)">📚 Estudo</button>
+            <button class="config-tab" onclick="switchTab('privacidade', this)">🔒 Privacidade</button>
+            <button class="config-tab" onclick="switchTab('sobre', this)">ℹ️ Sobre</button>
         </div>
 
-        <!-- Seção Perfil -->
-        <div style="background:white; border-radius:20px; padding:26px 28px; box-shadow:0 4px 16px rgba(0,0,0,0.05); margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:14px; border-bottom:2px solid #f0f4f9;">
-                <div>
-                    <h3 style="font-size:19px; color:#1a2a3a;">👤 Informações do Perfil</h3>
-                    <p style="font-size:13px; color:#94a3b8;">Gerencie suas informações pessoais</p>
+        <!-- PERFIL -->
+        <div class="config-section active" id="sec-perfil">
+            <div class="config-card">
+                <div class="config-card-header">
+                    <div>
+                        <h3>👤 Informações do Perfil</h3>
+                        <p>Gerencie suas informações pessoais</p>
+                    </div>
                 </div>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:24px; margin-bottom:20px; flex-wrap:wrap;">
-                <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#1a2a3a,#4a7a9c); display:flex; align-items:center; justify-content:center; font-size:30px; color:white; font-weight:700; position:relative;">
-                    {{ user_initials|default:"U" }}
-                    <div style="position:absolute; bottom:2px; right:2px; width:28px; height:28px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15); cursor:pointer; font-size:12px;">📷</div>
+                <div class="profile-section">
+                    <div class="avatar-container">
+                        {% if perfil.avatar %}
+                            <img src="{{ perfil.avatar.url }}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid {{ config.cor_primaria|default:'#2563eb' }};">
+                        {% else %}
+                            <div class="avatar-placeholder" id="avatarPreview">
+                                {{ user_initials|default:"U" }}
+                            </div>
+                        {% endif %}
+                        <label class="avatar-edit-btn" for="fotoInput" title="Alterar foto">📷</label>
+                        <input type="file" id="fotoInput" accept="image/*" onchange="uploadFoto(event)">
+                    </div>
+                    <div>
+                        <h4 style="font-size:20px; color:#1a2a3a;" id="profileNameDisplay">{{ user.get_full_name|default:user.username }}</h4>
+                        <p style="font-size:14px; color:#94a3b8;" id="profileEmailDisplay">{{ user.email }}</p>
+                    </div>
                 </div>
-                <div>
-                    <h4 style="font-size:18px; color:#1a2a3a;">{{ user.get_full_name|default:user.username }}</h4>
-                    <p style="font-size:14px; color:#94a3b8;">{{ user.email }}</p>
-                </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                <div>
-                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Nome Completo</label>
-                    <input type="text" value="{{ user.get_full_name|default:user.username }}" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
-                </div>
-                <div>
-                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">E-mail</label>
-                    <input type="email" value="{{ user.email }}" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
-                </div>
-            </div>
-
-            <div style="display:flex; gap:12px; margin-top:20px;">
-                <button style="padding:12px 24px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾 Salvar Perfil</button>
+                <form id="perfilForm">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" class="form-input" id="inputName" value="{{ user.get_full_name|default:user.username }}">
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" class="form-input" id="inputEmail" value="{{ user.email }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" class="form-input" id="inputPhone" value="{{ perfil.telefone|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Nascimento</label>
+                            <input type="date" class="form-input" id="inputBirth" value="{{ perfil.data_nascimento|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Instituição de Ensino</label>
+                        <input type="text" class="form-input" id="inputSchool" value="{{ perfil.instituicao|default:'' }}">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Série / Ano</label>
+                            <select class="form-input" id="inputGrade">
+                                <option value="1EM" {% if perfil.serie == '1EM' %}selected{% endif %}>1º Ano - Ensino Médio</option>
+                                <option value="2EM" {% if perfil.serie == '2EM' %}selected{% endif %}>2º Ano - Ensino Médio</option>
+                                <option value="3EM" {% if perfil.serie == '3EM' %}selected{% endif %}>3º Ano - Ensino Médio</option>
+                                <option value="CURSINHO" {% if perfil.serie == 'CURSINHO' %}selected{% endif %}>Cursinho Pré-Vestibular</option>
+                                <option value="SUPERIOR" {% if perfil.serie == 'SUPERIOR' %}selected{% endif %}>Ensino Superior</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Objetivo Principal</label>
+                            <select class="form-input" id="inputGoal">
+                                <option value="ENEM" {% if perfil.objetivo == 'ENEM' %}selected{% endif %}>ENEM</option>
+                                <option value="VESTIBULAR" {% if perfil.objetivo == 'VESTIBULAR' %}selected{% endif %}>Vestibular</option>
+                                <option value="CONCURSO" {% if perfil.objetivo == 'CONCURSO' %}selected{% endif %}>Concurso</option>
+                                <option value="ESTUDOS_GERAIS" {% if perfil.objetivo == 'ESTUDOS_GERAIS' %}selected{% endif %}>Estudos Gerais</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar Perfil</button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Zona de Perigo -->
-        <div style="border:2px solid #fca5a5; border-radius:20px; padding:26px 28px; background:#fef2f2;">
-            <h3 style="color:#dc2626; margin-bottom:4px; font-size:18px;">⚠️ Zona de Perigo</h3>
-            <p style="color:#64748b; font-size:14px; margin-bottom:16px;">Ações irreversíveis. Prossiga com cautela.</p>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #fecaca; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h4 style="font-size:15px; color:#1a2a3a;">🗑️ Limpar Todos os Dados</h4>
-                    <p style="font-size:13px; color:#94a3b8;">Remove todo o histórico de estudo e progresso</p>
+        <!-- APARÊNCIA -->
+        <div class="config-section" id="sec-aparencia">
+            <div class="config-card">
+                <div class="config-card-header">
+                    <div>
+                        <h3>🎨 Tema</h3>
+                        <p>Escolha o tema visual do sistema</p>
+                    </div>
                 </div>
-                <button onclick="if(confirm('Tem certeza?')) alert('Dados limpos!')" style="padding:10px 20px; background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; border-radius:10px; font-weight:600; cursor:pointer;">🗑️ Limpar</button>
+                <div class="theme-options">
+    <div class="theme-option theme-light {% if config.tema == 'light' %}active{% endif %}" onclick="selectTheme(this, 'light')">
+    <div class="theme-preview" style="background: linear-gradient(135deg, #f0f4f9, #e2e8f0); border: 1px solid #e2e8f0;"></div>
+    <span>☀️ Claro</span>
+    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Fundo claro, texto escuro</div>
+</div>
+
+<div class="theme-option theme-dark {% if config.tema == 'dark' %}active{% endif %}" onclick="selectTheme(this, 'dark')">
+    <div class="theme-preview" style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #1e293b;"></div>
+    <span>🌙 Escuro</span>
+    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Fundo escuro sólido</div>
+</div>
+   <div class="theme-option theme-blue {% if config.tema == 'blue' %}active{% endif %}" onclick="selectTheme(this, 'blue')">
+    <div class="theme-preview" style="background: linear-gradient(135deg, #0f1a2a 0%, #1a2a3a 50%, #243b4f 100%); border: 1px solid #4a7a9c;"></div>
+    <span>🔵 Azul Degradê</span>
+    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Fundo degradê azul escuro</div>
+</div>
+<div style="margin-top:10px; padding:8px 12px; background:#f0f4f9; border-radius:8px;">
+    <span style="font-size:13px; color:#64748b;">Tema atual: <strong>{{ config.tema|default:'light' }}</strong></span>
+</div>
+                <div class="color-options">
+                    <div class="color-option {% if config.cor_primaria == '#2563eb' %}active{% endif %}" style="background:#2563eb" onclick="selectColor(this, '#2563eb')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#7c3aed' %}active{% endif %}" style="background:#7c3aed" onclick="selectColor(this, '#7c3aed')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#16a34a' %}active{% endif %}" style="background:#16a34a" onclick="selectColor(this, '#16a34a')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#ea580c' %}active{% endif %}" style="background:#ea580c" onclick="selectColor(this, '#ea580c')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#e11d48' %}active{% endif %}" style="background:#e11d48" onclick="selectColor(this, '#e11d48')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#0891b2' %}active{% endif %}" style="background:#0891b2" onclick="selectColor(this, '#0891b2')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#d97706' %}active{% endif %}" style="background:#d97706" onclick="selectColor(this, '#d97706')"></div>
+                    <div class="color-option {% if config.cor_primaria == '#334155' %}active{% endif %}" style="background:#334155" onclick="selectColor(this, '#334155')"></div>
+                </div>
+                <div style="margin-top:10px; padding:8px 12px; background:#f0f4f9; border-radius:8px;">
+                    <span style="font-size:13px; color:#64748b;">Cor atual: <strong style="color: {{ config.cor_primaria }};">{{ config.cor_primaria }}</strong></span>
+                    <div style="display:inline-block; width:20px; height:20px; border-radius:50%; background: {{ config.cor_primaria }}; margin-left:8px; vertical-align:middle;"></div>
+                </div>
             </div>
+        </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; flex-wrap:wrap; gap:12px;">
-                <div>
-                    <h4 style="font-size:15px; color:#1a2a3a;">❌ Excluir Conta</h4>
-                    <p style="font-size:13px; color:#94a3b8;">Remove permanentemente sua conta e todos os dados</p>
+        <!-- NOTIFICAÇÕES - Resumido -->
+        <div class="config-section" id="sec-notificacoes">
+            <div class="config-card">
+                <div class="config-card-header">
+                    <div>
+                        <h3>🔔 Notificações</h3>
+                        <p>Configure seus alertas</p>
+                    </div>
                 </div>
-                <button onclick="if(confirm('Tem certeza?')) alert('Conta excluída!')" style="padding:10px 20px; background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; border-radius:10px; font-weight:600; cursor:pointer;">❌ Excluir Conta</button>
+                <div class="toggle-group">
+                    <div class="toggle-info"><h4>Notificações por E-mail</h4><p>Receba alertas no seu e-mail</p></div>
+                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-group">
+                    <div class="toggle-info"><h4>Notificações Push</h4><p>Receba notificações no navegador</p></div>
+                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOBRE -->
+        <div class="config-section" id="sec-sobre">
+            <div class="config-card about-card">
+                <div class="about-logo">SIOE</div>
+                <div class="about-version">Versão 1.0.0</div>
+                <p class="about-description">O <strong>Sistema Inteligente de Organização de Estudos</strong> foi criado para ajudar estudantes a organizar suas matérias, cronogramas e metas de estudo de forma eficiente e intuitiva.</p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function switchTab(tabName, btn) {
+        document.querySelectorAll('.config-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.config-section').forEach(function(s) { s.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('sec-' + tabName).classList.add('active');
+    }
+
+    function uploadFoto(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('avatar', file);
+        fetch('{% url "core:upload_avatar" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { alert('✅ Foto atualizada!'); window.location.reload(); }
+            else { alert('❌ Erro ao fazer upload.'); }
+        });
+    }
+
+    function salvarPerfil() {
+        const data = {
+            nome: document.getElementById('inputName').value,
+            email: document.getElementById('inputEmail').value,
+            telefone: document.getElementById('inputPhone').value,
+            data_nascimento: document.getElementById('inputBirth').value,
+            instituicao: document.getElementById('inputSchool').value,
+            serie: document.getElementById('inputGrade').value,
+            objetivo: document.getElementById('inputGoal').value,
+        };
+        fetch('{% url "core:configuracoes" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { alert('✅ Perfil salvo!'); }
+            else { alert('❌ Erro ao salvar.'); }
+        });
+    }
+function selectTheme(el, tema) {
+    document.querySelectorAll('.theme-option').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    
+    // Aplicar tema imediatamente em TODO o site
+    document.documentElement.setAttribute('data-theme', tema);
+    document.body.setAttribute('data-theme', tema);
+    localStorage.setItem('sioe_tema', tema);
+    
+    const corAtiva = document.querySelector('.color-option.active');
+    const cor = corAtiva ? corAtiva.style.background : '#2563eb';
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ tema: tema, cor_primaria: cor })
+    })
+    .then(response => response.json())
+    .then(data => { 
+        if (data.success) { 
+            // Atualizar todas as páginas (opcional)
+            console.log('Tema salvo:', tema);
+        } 
+    });
+}
+    function selectColor(el, cor) {
+    document.querySelectorAll('.color-option').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+    
+    // Atualizar cor imediatamente
+    document.documentElement.style.setProperty('--primary-color', cor);
+    document.documentElement.style.setProperty('--primary-light', cor + '20');
+    document.documentElement.style.setProperty('--primary-dark', cor + '80');
+    
+    const temaAtivo = document.querySelector('.theme-option.active');
+    const tema = temaAtivo ? temaAtivo.querySelector('span').textContent.toLowerCase().trim() : 'light';
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ tema: tema, cor_primaria: cor })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.config-tab.active').forEach(el => { el.style.background = cor; });
+            document.querySelectorAll('.btn-primary').forEach(el => { el.style.background = cor; });
+        }
+    });
+}
+    function salvarTudo() {
+    const corAtiva = document.querySelector('.color-option.active');
+    const cor = corAtiva ? corAtiva.style.background : '#2563eb';
+    const temaAtivo = document.querySelector('.theme-option.active');
+    const tema = temaAtivo ? temaAtivo.querySelector('span').textContent.toLowerCase().trim() : 'light';
+    
+    // Aplicar tema imediatamente
+    document.documentElement.setAttribute('data-theme', tema);
+    document.body.setAttribute('data-theme', tema);
+    localStorage.setItem('sioe_tema', tema);
+    
+    const data = {
+        nome: document.getElementById('inputName')?.value || '',
+        email: document.getElementById('inputEmail')?.value || '',
+        telefone: document.getElementById('inputPhone')?.value || '',
+        data_nascimento: document.getElementById('inputBirth')?.value || '',
+        instituicao: document.getElementById('inputSchool')?.value || '',
+        serie: document.getElementById('inputGrade')?.value || '',
+        objetivo: document.getElementById('inputGoal')?.value || '',
+        tema: tema,
+        cor_primaria: cor
+    };
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) { 
+            alert('✅ Configurações salvas!'); 
+            window.location.reload(); 
+        } else { 
+            alert('❌ Erro ao salvar.'); 
+        }
+    });
+}
+   
+    // ===== APLICAR TEMA IMEDIATAMENTE =====
+function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    // Salvar no localStorage para persistência rápida
+    localStorage.setItem('sioe_tema', tema);
+}
+
+// Carregar tema ao entrar na página
+document.addEventListener('DOMContentLoaded', function() {
+    const temaSalvo = localStorage.getItem('sioe_tema') || '{{ config.tema|default:"light" }}';
+    aplicarTema(temaSalvo);
+});
+</script>
 {% endblock %}

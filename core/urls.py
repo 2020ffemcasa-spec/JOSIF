@@ -29,5 +29,7 @@ urlpatterns = [
     path('relatorios/', views.relatorios_view, name='relatorios'),
     
     # Configurações
+    path('configuracoes/salvar/', views.config_salvar_tudo, name='config_salvar_tudo'),
     path('configuracoes/', views.configuracoes_view, name='configuracoes'),
+    path('upload-avatar/', views.upload_avatar, name='upload_avatar'),
 ]

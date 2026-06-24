@@ -120,7 +120,19 @@ def dashboard(request):
     }
     
     return render(request, 'core/dashboard.html', context)
-
+@login_required
+def upload_avatar(request):
+    """Upload da foto de perfil"""
+    if request.method == 'POST' and request.FILES.get('avatar'):
+        perfil, created = Perfil.objects.get_or_create(usuario=request.user)
+        perfil.avatar = request.FILES['avatar']
+        perfil.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Foto atualizada com sucesso!',
+            'url': perfil.avatar.url
+        })
+    return JsonResponse({'success': False, 'message': 'Nenhuma imagem enviada'}, status=400)
 
 @login_required
 def materias_view(request):
@@ -286,7 +298,6 @@ def meta_update_status(request, pk):
         })
     
     return JsonResponse({'error': 'Método não permitido'}, status=405)
-
 @login_required
 def relatorios_view(request):
     """Página de relatórios"""
@@ -308,18 +319,55 @@ def relatorios_view(request):
     # Atividades concluídas
     atividades_concluidas = Atividade.objects.filter(usuario=user, concluida=True).count()
     
-    # Horas estudadas - CORRIGIDO
-    horas_estudadas = 0
+    # ===== HORAS ESTUDADAS (CORRIGIDO) =====
+    # Buscar todos os registros de estudo do usuário
     registros = RegistroEstudo.objects.filter(usuario=user)
-    if registros.exists():
-        total_minutos = registros.aggregate(Sum('duracao_minutos'))['duracao_minutos__sum'] or 0
-        horas_estudadas = round(total_minutos / 60, 1)
+    
+    # Calcular total de minutos
+    total_minutos = 0
+    for registro in registros:
+        total_minutos += registro.duracao_minutos
+    
+    # Converter para horas (1 casa decimal)
+    horas_estudadas = round(total_minutos / 60, 1)
+    
+    # Se não tiver registros, mostrar 0
+    if horas_estudadas == 0:
+        horas_estudadas = 0.0
     
     # Ranking por matéria
     materias = Materia.objects.filter(usuario=user).order_by('-progresso')
     
     # Registros recentes
     registros_recentes = RegistroEstudo.objects.filter(usuario=user).order_by('-data', '-hora_inicio')[:10]
+    
+    # Dados para o gráfico (últimos 7 dias)
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    hoje = timezone.now().date()
+    dias_semana = []
+    horas_por_dia = []
+    
+    for i in range(6, -1, -1):
+        dia = hoje - timedelta(days=i)
+        # Nome do dia em português
+        dias_pt = {
+            'Mon': 'Seg', 'Tue': 'Ter', 'Wed': 'Qua',
+            'Thu': 'Qui', 'Fri': 'Sex', 'Sat': 'Sáb', 'Sun': 'Dom'
+        }
+        dia_nome = dia.strftime('%a')
+        dias_semana.append(dias_pt.get(dia_nome, dia_nome))
+        
+        # Buscar horas estudadas neste dia
+        registros_dia = RegistroEstudo.objects.filter(
+            usuario=user,
+            data=dia
+        )
+        total_minutos_dia = 0
+        for reg in registros_dia:
+            total_minutos_dia += reg.duracao_minutos
+        horas_por_dia.append(round(total_minutos_dia / 60, 1))
     
     context = {
         'total_materias': total_materias,
@@ -330,60 +378,102 @@ def relatorios_view(request):
         'horas_estudadas': horas_estudadas,
         'materias': materias,
         'registros_recentes': registros_recentes,
+        'dias_semana': dias_semana,
+        'horas_por_dia': horas_por_dia,
     }
     
     return render(request, 'core/relatorios.html', context)
-
 
 @login_required
 def configuracoes_view(request):
     """Página de configurações"""
     user = request.user
-    perfil = Perfil.objects.get(usuario=user)
+    perfil, created = Perfil.objects.get_or_create(usuario=user)
     config, created = Configuracao.objects.get_or_create(usuario=user)
     
     if request.method == 'POST':
-        perfil_form = PerfilForm(request.POST, instance=perfil)
-        config_form = ConfiguracaoForm(request.POST, instance=config)
+        import json
         
-        if perfil_form.is_valid() and config_form.is_valid():
-            perfil_form.save()
-            config_form.save()
-            
-            # Atualizar nome do usuário
-            nome = request.POST.get('nome_completo')
-            if nome:
-                user.first_name = nome
-                user.save()
-            
+        # Verifica se é JSON ou formulário
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Salvar perfil
+        if 'nome' in data:
+            user.first_name = data['nome']
+            user.save()
+        
+        if 'email' in data:
+            user.email = data['email']
+            user.save()
+        
+        if 'telefone' in data:
+            perfil.telefone = data['telefone']
+        
+        if 'data_nascimento' in data and data['data_nascimento']:
+            from datetime import datetime
+            perfil.data_nascimento = datetime.strptime(data['data_nascimento'], '%Y-%m-%d').date()
+        
+        if 'instituicao' in data:
+            perfil.instituicao = data['instituicao']
+        
+        if 'serie' in data:
+            perfil.serie = data['serie']
+        
+        if 'objetivo' in data:
+            perfil.objetivo = data['objetivo']
+        
+        perfil.save()
+        
+        # Salvar configurações
+        if 'tema' in data:
+            config.tema = data['tema']
+        
+        if 'cor_primaria' in data:
+            config.cor_primaria = data['cor_primaria']
+        
+        config.save()
+        
+        if request.content_type == 'application/json':
+            return JsonResponse({'success': True, 'message': 'Configurações salvas com sucesso!'})
+        else:
             messages.success(request, 'Configurações salvas com sucesso!')
             return redirect('core:configuracoes')
-        else:
-            messages.error(request, 'Erro ao salvar configurações.')
-    else:
-        perfil_form = PerfilForm(instance=perfil)
-        config_form = ConfiguracaoForm(instance=config)
     
+    # GET - Carregar dados
     context = {
-        'perfil_form': perfil_form,
-        'config_form': config_form,
         'perfil': perfil,
         'config': config,
+        'user': user,
     }
     
     return render(request, 'core/configuracoes.html', context)
-
 
 @login_required
 def config_salvar_tudo(request):
     """Salvar todas as configurações (AJAX)"""
     if request.method == 'POST':
+        import json
         data = json.loads(request.body)
-        messages.success(request, 'Todas as configurações foram salvas com sucesso!')
+        
+        config, created = Configuracao.objects.get_or_create(usuario=request.user)
+        
+        if 'tema' in data:
+            config.tema = data['tema']
+        if 'cor_primaria' in data:
+            config.cor_primaria = data['cor_primaria']
+        if 'notificacoes_email' in data:
+            config.notificacoes_email = data['notificacoes_email'] == 'true'
+        if 'lembrete_diario' in data:
+            config.lembrete_diario = data['lembrete_diario'] == 'true'
+        
+        config.save()
+        
         return JsonResponse({'success': True})
     
     return JsonResponse({'error': 'Método não permitido'}, status=405)
-
 
 # ===== FUNÇÕES AUXILIARES =====
 @login_required
