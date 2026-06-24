@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Cadastro - SIOE{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:center; align-items:center; min-height:80vh;">
+    <div style="background:white; padding:40px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.1); width:100%; max-width:450px;">
+        <h1 style="font-size:28px; color:#1a2a3a;">📝 Criar Conta</h1>
+        <p style="color:#8899aa; margin-bottom:25px;">Preencha os dados para começar</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom:14px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500;">Nome Completo *</label>
+                <input type="text" name="first_name" placeholder="Seu nome completo" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500;">E-mail *</label>
+                <input type="email" name="email" placeholder="seu.email@exemplo.com" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500;">Senha *</label>
+                <input type="password" name="password1" placeholder="Mínimo 8 caracteres" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500;">Confirmar Senha *</label>
+                <input type="password" name="password2" placeholder="Digite novamente" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500;">Objetivo Principal</label>
+                <select name="objetivo" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                    <option value="ENEM">ENEM</option>
+                    <option value="VESTIBULAR">Vestibular</option>
+                    <option value="CONCURSO">Concurso</option>
+                    <option value="ESTUDOS_GERAIS" selected>Estudos Gerais</option>
+                </select>
+            </div>
+            <button type="submit" style="width:100%; padding:14px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer;">💾 Criar Conta</button>
+        </form>
+        
+        <p style="text-align:center; margin-top:20px; color:#8899aa;">
+            Já possui conta? <a href="{% url 'core:login' %}" style="color:#4a7a9c; text-decoration:none; font-weight:600;">Faça login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

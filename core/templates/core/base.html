@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIOE - {% block title %}Sistema de Estudos{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f4f9; color: #1a2a3a; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .messages { margin-bottom: 20px; }
+        .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; }
+        .message-success { background: #dcfce7; color: #166534; }
+        .message-error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

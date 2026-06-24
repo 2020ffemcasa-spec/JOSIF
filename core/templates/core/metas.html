@@ -1,0 +1,458 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Metas - SIOE{% endblock %}
+
+{% block content %}
+<style>
+    .goal-card {
+        background: white;
+        border-radius: 20px;
+        padding: 26px 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
+        transition: all 0.35s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .goal-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.10);
+    }
+    .goal-card .card-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        border-radius: 20px 20px 0 0;
+    }
+    .goal-card .card-bar.on-track { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .goal-card .card-bar.at-risk { background: linear-gradient(90deg, #ca8a04, #eab308); }
+    .goal-card .card-bar.behind { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    .goal-card .card-bar.completed { background: linear-gradient(90deg, #2563eb, #4a7a9c); }
+
+    .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+        padding-top: 4px;
+    }
+    .goal-header h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a2a3a;
+    }
+    .goal-badge {
+        padding: 4px 14px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+    }
+    .goal-badge.on-track { background: linear-gradient(135deg, #16a34a, #22c55e); }
+    .goal-badge.at-risk { background: linear-gradient(135deg, #ca8a04, #eab308); }
+    .goal-badge.behind { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .goal-badge.completed { background: linear-gradient(135deg, #2563eb, #4a7a9c); }
+
+    .goal-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 24px;
+        margin-bottom: 16px;
+        padding: 12px 0;
+        border-top: 1px solid #f0f4f9;
+        border-bottom: 1px solid #f0f4f9;
+    }
+    .goal-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #64748b;
+    }
+    .goal-meta-item strong { color: #1a2a3a; font-weight: 600; }
+    .goal-description {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    .progress-box { margin-top: 4px; }
+    .progress-top {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1a2a3a;
+    }
+    .progress-top .percent { color: #4a7a9c; font-weight: 600; }
+    .progress {
+        width: 100%;
+        height: 8px;
+        background: #e8edf3;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .progress div {
+        height: 100%;
+        border-radius: 20px;
+        transition: width 1.2s ease;
+    }
+    .goal-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+    .btn-edit { background: #eef2ff; color: #4a7a9c; }
+    .btn-edit:hover { background: #dbeafe; transform: translateY(-2px); }
+    .btn-delete { background: #fef2f2; color: #dc2626; }
+    .btn-delete:hover { background: #fee2e2; transform: translateY(-2px); }
+    .filter-btn {
+        padding: 8px 20px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 50px;
+        background: white;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .filter-btn:hover { border-color: #4a7a9c; color: #1a2a3a; }
+    .filter-btn.active {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 30px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
+    }
+    .empty-state .empty-icon { font-size: 56px; display: block; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 22px; font-weight: 700; color: #1a2a3a; margin-bottom: 8px; }
+    .empty-state p { font-size: 15px; color: #8899aa; max-width: 400px; margin: 0 auto; line-height: 1.6; }
+    .empty-state .btn-start {
+        margin-top: 20px;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c4458 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .empty-state .btn-start:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    .modal-overlay.active {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-box {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .modal-box h3 {
+        font-size: 24px;
+        color: #1a2a3a;
+        margin-bottom: 8px;
+    }
+    .modal-box .subtitle {
+        color: #8899aa;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    @media(max-width: 768px) {
+        .goals-grid { grid-template-columns: 1fr !important; }
+        .filter-btn { padding: 6px 14px; font-size: 12px; }
+        .modal-box { padding: 24px; }
+    }
+</style>
+
+<div style="display:flex; min-height:90vh;">
+    <!-- Sidebar -->
+    <div style="width:260px; background:linear-gradient(180deg,#0f1a2a,#1a2a3a); color:white; padding:30px 20px; border-radius:16px; margin-right:30px; flex-shrink:0;">
+        <div style="margin-bottom:40px;">
+            <h1 style="font-size:36px;">SIOE<span style="color:#8ab4d6;">.</span></h1>
+            <p style="font-size:13px; color:rgba(255,255,255,0.5);">Sistema de Organização de Estudos</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'core:dashboard' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📊 Dashboard</a>
+            <a href="{% url 'core:materias' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📚 Matérias</a>
+            <a href="{% url 'core:cronogramas' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📅 Cronograma</a>
+            <a href="{% url 'core:metas' %}" style="color:white; padding:12px 16px; border-radius:10px; text-decoration:none; background:rgba(138,180,214,0.15);">🎯 Metas</a>
+            <a href="{% url 'core:relatorios' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📈 Relatórios</a>
+            <a href="{% url 'core:configuracoes' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">⚙️ Configurações</a>
+        </div>
+        <div style="margin-top:40px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer;">
+            <a href="{% url 'core:logout' %}" style="color:rgba(255,255,255,0.7); text-decoration:none;">🔓 Sair da Conta</a>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2 style="font-size:28px;">🎯 <span style="color:#4a7a9c;">Metas de Estudo</span></h2>
+            <button onclick="document.getElementById('modalCriar').classList.add('active');" style="background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer;">+ Nova Meta</button>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="filterMetas('all', this)">📋 Todas</button>
+            <button class="filter-btn" onclick="filterMetas('on-track', this)">✅ No Caminho</button>
+            <button class="filter-btn" onclick="filterMetas('at-risk', this)">⚠️ Em Risco</button>
+            <button class="filter-btn" onclick="filterMetas('behind', this)">🔴 Atrasadas</button>
+            <button class="filter-btn" onclick="filterMetas('completed', this)">✅ Concluídas</button>
+        </div>
+
+        <!-- Lista de Metas -->
+        <div class="goals-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:20px;" id="goalsGrid">
+            {% if metas %}
+                {% for meta in metas %}
+                <div class="goal-card" data-status="{{ meta.status }}" data-id="{{ meta.id }}">
+                    <div class="card-bar {{ meta.status }}"></div>
+                    <div class="goal-header">
+                        <h3>{{ meta.titulo }}</h3>
+                        <span class="goal-badge {{ meta.status }}">{{ meta.get_status_display }}</span>
+                    </div>
+                    <div class="goal-meta">
+                        <span class="goal-meta-item">📅 <strong>Prazo:</strong> {{ meta.prazo|default:"Não definido" }}</span>
+                        <span class="goal-meta-item">📊 <strong>Meta:</strong> {{ meta.meta_progresso }}%</span>
+                    </div>
+                    {% if meta.descricao %}
+                    <p class="goal-description">{{ meta.descricao }}</p>
+                    {% endif %}
+                    <div class="progress-box">
+                        <div class="progress-top">
+                            <span>Progresso</span>
+                            <span class="percent">{{ meta.progresso_atual }}%</span>
+                        </div>
+                        <div class="progress">
+                            {% if meta.progresso_atual >= meta.meta_progresso %}
+                                <div style="width:{{ meta.progresso_atual }}%;background:linear-gradient(90deg,#16a34a,#4ade80);"></div>
+                            {% elif meta.progresso_atual >= meta.meta_progresso|add:"-30" %}
+                                <div style="width:{{ meta.progresso_atual }}%;background:linear-gradient(90deg,#16a34a,#4ade80);"></div>
+                            {% elif meta.progresso_atual >= meta.meta_progresso|add:"-50" %}
+                                <div style="width:{{ meta.progresso_atual }}%;background:linear-gradient(90deg,#ca8a04,#eab308);"></div>
+                            {% else %}
+                                <div style="width:{{ meta.progresso_atual }}%;background:linear-gradient(90deg,#dc2626,#ef4444);"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="goal-actions">
+                        <button class="btn-action btn-edit" onclick="openEditModal({{ meta.id }})">✏️ Editar</button>
+                        <button class="btn-action btn-delete" onclick="if(confirm('Tem certeza que deseja excluir esta meta?')){ window.location.href='{% url 'core:meta_delete' meta.id %}'; }">🗑️ Excluir</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <span class="empty-icon">🎯</span>
+                    <h3>Nenhuma meta definida</h3>
+                    <p>Defina suas primeiras metas de estudo para acompanhar seu progresso.</p>
+                    <button class="btn-start" onclick="document.getElementById('modalCriar').classList.add('active');">➕ Criar Meta</button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CRIAR -->
+<div class="modal-overlay" id="modalCriar">
+    <div class="modal-box">
+        <h3>🎯 Nova Meta</h3>
+        <p class="subtitle">Preencha os dados para criar uma nova meta.</p>
+        <form method="POST" action="{% url 'core:metas' %}">
+            {% csrf_token %}
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Título da Meta *</label>
+                <input type="text" name="titulo" placeholder="Ex: Matemática - ENEM" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Matéria</label>
+                <select name="materia" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                    <option value="">Selecione uma matéria</option>
+                    {% for materia in materias %}
+                    <option value="{{ materia.id }}">{{ materia.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Descrição</label>
+                <textarea name="descricao" rows="3" placeholder="Descreva os objetivos..." style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Meta (%)</label>
+                    <input type="number" name="meta_progresso" value="80" min="1" max="100" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Progresso Atual (%)</label>
+                    <input type="number" name="progresso_atual" value="0" min="0" max="100" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Prazo</label>
+                <input type="date" name="prazo" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="submit" style="flex:1; padding:14px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾 Salvar</button>
+                <button type="button" onclick="document.getElementById('modalCriar').classList.remove('active');" style="flex:1; padding:14px; background:#f1f4f9; color:#64748b; border:none; border-radius:10px; font-weight:600; cursor:pointer;">✖ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalEditar">
+    <div class="modal-box">
+        <h3>✏️ Editar Meta</h3>
+        <p class="subtitle">Atualize as informações da sua meta.</p>
+        <form method="POST" id="formEditar">
+            {% csrf_token %}
+            <input type="hidden" name="meta_id" id="editMetaId">
+            
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Título da Meta *</label>
+                <input type="text" name="titulo" id="editTitulo" placeholder="Ex: Matemática - ENEM" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Matéria</label>
+                <select name="materia" id="editMateria" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                    <option value="">Selecione uma matéria</option>
+                    {% for materia in materias %}
+                    <option value="{{ materia.id }}">{{ materia.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Descrição</label>
+                <textarea name="descricao" id="editDescricao" rows="3" placeholder="Descreva os objetivos..." style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Meta (%)</label>
+                    <input type="number" name="meta_progresso" id="editMetaProgresso" min="1" max="100" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Progresso Atual (%)</label>
+                    <input type="number" name="progresso_atual" id="editProgressoAtual" min="0" max="100" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Prazo</label>
+                <input type="date" name="prazo" id="editPrazo" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="submit" style="flex:1; padding:14px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾 Salvar Alterações</button>
+                <button type="button" onclick="document.getElementById('modalEditar').classList.remove('active');" style="flex:1; padding:14px; background:#f1f4f9; color:#64748b; border:none; border-radius:10px; font-weight:600; cursor:pointer;">✖ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterMetas(status, btn) {
+        document.querySelectorAll('.filter-btn').forEach(function(f) {
+            f.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        document.querySelectorAll('.goal-card').forEach(function(card) {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function openEditModal(metaId) {
+        // Buscar os dados da meta via AJAX
+        fetch(`/metas/edit/${metaId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editMetaId').value = metaId;
+                document.getElementById('editTitulo').value = data.titulo || '';
+                document.getElementById('editMateria').value = data.materia || '';
+                document.getElementById('editDescricao').value = data.descricao || '';
+                document.getElementById('editMetaProgresso').value = data.meta_progresso || 80;
+                document.getElementById('editProgressoAtual').value = data.progresso_atual || 0;
+                document.getElementById('editPrazo').value = data.prazo || '';
+                
+                // Mudar a action do formulário
+                document.getElementById('formEditar').action = `/metas/edit/${metaId}/`;
+                
+                document.getElementById('modalEditar').classList.add('active');
+            })
+            .catch(error => {
+                alert('Erro ao carregar os dados da meta.');
+                console.error('Erro:', error);
+            });
+    }
+
+    // Fechar modais com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modalCriar').classList.remove('active');
+            document.getElementById('modalEditar').classList.remove('active');
+        }
+    });
+
+    // Fechar modais clicando fora
+    document.getElementById('modalCriar').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+    document.getElementById('modalEditar').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

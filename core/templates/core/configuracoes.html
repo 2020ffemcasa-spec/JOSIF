@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Configurações - SIOE{% endblock %}
+
+{% block content %}
+<div style="display:flex; min-height:90vh;">
+    <!-- Sidebar -->
+    <div style="width:260px; background:linear-gradient(180deg,#0f1a2a,#1a2a3a); color:white; padding:30px 20px; border-radius:16px; margin-right:30px; flex-shrink:0;">
+        <div style="margin-bottom:40px;">
+            <h1 style="font-size:36px;">SIOE<span style="color:#8ab4d6;">.</span></h1>
+            <p style="font-size:13px; color:rgba(255,255,255,0.5);">Sistema de Organização de Estudos</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <a href="{% url 'core:dashboard' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📊 Dashboard</a>
+            <a href="{% url 'core:materias' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📚 Matérias</a>
+            <a href="{% url 'core:cronogramas' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📅 Cronograma</a>
+            <a href="{% url 'core:metas' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">🎯 Metas</a>
+            <a href="{% url 'core:relatorios' %}" style="color:rgba(255,255,255,0.7); padding:12px 16px; border-radius:10px; text-decoration:none;">📈 Relatórios</a>
+            <a href="{% url 'core:configuracoes' %}" style="color:white; padding:12px 16px; border-radius:10px; text-decoration:none; background:rgba(138,180,214,0.15);">⚙️ Configurações</a>
+        </div>
+        <div style="margin-top:40px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer;">
+            <a href="{% url 'core:logout' %}" style="color:rgba(255,255,255,0.7); text-decoration:none;">🔓 Sair da Conta</a>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2 style="font-size:28px;">⚙️ <span style="color:#4a7a9c;">Configurações</span></h2>
+            <button onclick="alert('✅ Todas as configurações foram salvas!')" style="background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer;">💾 Salvar Tudo</button>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex; gap:8px; margin-bottom:25px; flex-wrap:wrap; background:white; padding:8px 12px; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; font-weight:500; cursor:pointer;">👤 Perfil</button>
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🎨 Aparência</button>
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🔔 Notificações</button>
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">📚 Estudo</button>
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">🔒 Privacidade</button>
+            <button style="padding:8px 18px; border-radius:10px; border:none; background:transparent; color:#64748b; font-weight:500; cursor:pointer;">ℹ️ Sobre</button>
+        </div>
+
+        <!-- Seção Perfil -->
+        <div style="background:white; border-radius:20px; padding:26px 28px; box-shadow:0 4px 16px rgba(0,0,0,0.05); margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:14px; border-bottom:2px solid #f0f4f9;">
+                <div>
+                    <h3 style="font-size:19px; color:#1a2a3a;">👤 Informações do Perfil</h3>
+                    <p style="font-size:13px; color:#94a3b8;">Gerencie suas informações pessoais</p>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:24px; margin-bottom:20px; flex-wrap:wrap;">
+                <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#1a2a3a,#4a7a9c); display:flex; align-items:center; justify-content:center; font-size:30px; color:white; font-weight:700; position:relative;">
+                    {{ user_initials|default:"U" }}
+                    <div style="position:absolute; bottom:2px; right:2px; width:28px; height:28px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15); cursor:pointer; font-size:12px;">📷</div>
+                </div>
+                <div>
+                    <h4 style="font-size:18px; color:#1a2a3a;">{{ user.get_full_name|default:user.username }}</h4>
+                    <p style="font-size:14px; color:#94a3b8;">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Nome Completo</label>
+                    <input type="text" value="{{ user.get_full_name|default:user.username }}" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">E-mail</label>
+                    <input type="email" value="{{ user.email }}" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button style="padding:12px 24px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾 Salvar Perfil</button>
+            </div>
+        </div>
+
+        <!-- Zona de Perigo -->
+        <div style="border:2px solid #fca5a5; border-radius:20px; padding:26px 28px; background:#fef2f2;">
+            <h3 style="color:#dc2626; margin-bottom:4px; font-size:18px;">⚠️ Zona de Perigo</h3>
+            <p style="color:#64748b; font-size:14px; margin-bottom:16px;">Ações irreversíveis. Prossiga com cautela.</p>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #fecaca; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h4 style="font-size:15px; color:#1a2a3a;">🗑️ Limpar Todos os Dados</h4>
+                    <p style="font-size:13px; color:#94a3b8;">Remove todo o histórico de estudo e progresso</p>
+                </div>
+                <button onclick="if(confirm('Tem certeza?')) alert('Dados limpos!')" style="padding:10px 20px; background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; border-radius:10px; font-weight:600; cursor:pointer;">🗑️ Limpar</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h4 style="font-size:15px; color:#1a2a3a;">❌ Excluir Conta</h4>
+                    <p style="font-size:13px; color:#94a3b8;">Remove permanentemente sua conta e todos os dados</p>
+                </div>
+                <button onclick="if(confirm('Tem certeza?')) alert('Conta excluída!')" style="padding:10px 20px; background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; border-radius:10px; font-weight:600; cursor:pointer;">❌ Excluir Conta</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
