@@ -15,6 +15,7 @@ urlpatterns = [
     # Matérias
     path('materias/', views.materias_view, name='materias'),
     path('materias/delete/<int:pk>/', views.materia_delete, name='materia_delete'),
+    path('materias/edit/<int:pk>/', views.materia_edit, name='materia_edit'),
     
     # Cronograma
     path('cronogramas/', views.cronogramas_view, name='cronogramas'),

@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.db.models import Sum, Count, Avg
+from django.db.models import Avg
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -175,8 +175,19 @@ def materia_delete(request, pk):
 
 @login_required
 def materia_edit(request, pk):
-    """Editar matéria (AJAX)"""
+    """Editar matéria (GET para buscar dados, POST para salvar)"""
     materia = get_object_or_404(Materia, pk=pk, usuario=request.user)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'id': materia.id,
+            'nome': materia.nome,
+            'professor': materia.professor or '',
+            'topicos': materia.topicos or '',
+            'carga_horaria': materia.carga_horaria,
+            'prioridade': materia.prioridade,
+            'progresso': materia.progresso,
+        })
     
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -224,6 +235,10 @@ def cronogramas_view(request):
         'form': form,
         'atividades_por_dia': atividades_por_dia,
         'dias_semana': dias_semana,
+        'materias': Materia.objects.filter(usuario=user).order_by('nome'),
+        'hoje': timezone.now().weekday(),
+        'total_atividades': atividades.count(),
+        'total_materias': Materia.objects.filter(usuario=user).count(),
     }
     
     return render(request, 'core/cronogramas.html', context)
@@ -265,6 +280,7 @@ def metas_view(request):
     context = {
         'form': form,
         'metas': metas,
+        'materias': Materia.objects.filter(usuario=user).order_by('nome'),
     }
     
     return render(request, 'core/metas.html', context)
@@ -280,24 +296,6 @@ def meta_delete(request, pk):
     return redirect('core:metas')
 
 
-@login_required
-def meta_update_status(request, pk):
-    """Atualizar status da meta (AJAX)"""
-    meta = get_object_or_404(Meta, pk=pk, usuario=request.user)
-    
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        meta.progresso_atual = data.get('progresso', meta.progresso_atual)
-        meta.status = meta.calcular_status()
-        meta.save()
-        return JsonResponse({
-            'success': True,
-            'status': meta.get_status_display(),
-            'status_class': meta.status,
-            'progresso': meta.progresso_atual,
-        })
-    
-    return JsonResponse({'error': 'Método não permitido'}, status=405)
 @login_required
 def relatorios_view(request):
     """Página de relatórios"""
@@ -342,9 +340,6 @@ def relatorios_view(request):
     registros_recentes = RegistroEstudo.objects.filter(usuario=user).order_by('-data', '-hora_inicio')[:10]
     
     # Dados para o gráfico (últimos 7 dias)
-    from django.utils import timezone
-    from datetime import timedelta
-    
     hoje = timezone.now().date()
     dias_semana = []
     horas_por_dia = []
@@ -392,8 +387,6 @@ def configuracoes_view(request):
     config, created = Configuracao.objects.get_or_create(usuario=user)
     
     if request.method == 'POST':
-        import json
-        
         # Verifica se é JSON ou formulário
         if request.content_type == 'application/json':
             data = json.loads(request.body)
@@ -413,7 +406,6 @@ def configuracoes_view(request):
             perfil.telefone = data['telefone']
         
         if 'data_nascimento' in data and data['data_nascimento']:
-            from datetime import datetime
             perfil.data_nascimento = datetime.strptime(data['data_nascimento'], '%Y-%m-%d').date()
         
         if 'instituicao' in data:
@@ -455,7 +447,6 @@ def configuracoes_view(request):
 def config_salvar_tudo(request):
     """Salvar todas as configurações (AJAX)"""
     if request.method == 'POST':
-        import json
         data = json.loads(request.body)
         
         config, created = Configuracao.objects.get_or_create(usuario=request.user)
@@ -496,7 +487,6 @@ def meta_edit(request, pk):
     elif request.method == 'POST':
         # Verifica se é JSON ou formulário
         if request.content_type == 'application/json':
-            import json
             data = json.loads(request.body)
         else:
             # É um formulário normal (POST)
@@ -515,8 +505,8 @@ def meta_edit(request, pk):
         return redirect('core:metas')
     
     return JsonResponse({'error': 'Método não permitido'}, status=405)
-    
-    return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+
 def get_emoji_for_subject(nome):
     """Retorna emoji para uma matéria"""
     emojis = {

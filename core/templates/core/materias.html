@@ -203,7 +203,7 @@
                         </div>
                     </div>
                     <div class="buttons">
-                        <button class="btn-action btn-edit" onclick="alert('✏️ Editar: {{ materia.nome }}')">✏️ Editar</button>
+                        <button class="btn-action btn-edit" onclick="openEditModal({{ materia.id }})">✏️ Editar</button>
                         <button class="btn-action btn-delete" onclick="if(confirm('Tem certeza que deseja excluir esta matéria?')){ window.location.href='{% url 'core:materia_delete' materia.id %}'; }">🗑️ Excluir</button>
                     </div>
                 </div>
@@ -262,11 +262,111 @@
     </div>
 </div>
 
+<!-- Modal Editar -->
+<div id="modalEdit" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:white; border-radius:24px; padding:40px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto;">
+        <h3 style="font-size:24px; color:#1a2a3a; margin-bottom:20px;">✏️ Editar Matéria</h3>
+        <form id="formEditMateria" onsubmit="return salvarEdicao(event)">
+            {% csrf_token %}
+            <input type="hidden" name="materia_id" id="edit_id">
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Nome da Matéria *</label>
+                <input type="text" name="nome" id="edit_nome" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;" required>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Professor</label>
+                <input type="text" name="professor" id="edit_professor" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Tópicos</label>
+                <textarea name="topicos" id="edit_topicos" rows="3" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Carga Horária (h/semana)</label>
+                <input type="number" name="carga_horaria" id="edit_carga_horaria" min="1" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Prioridade</label>
+                <select name="prioridade" id="edit_prioridade" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+                    <option value="high">🔴 Alta</option>
+                    <option value="medium">🟡 Média</option>
+                    <option value="low">🟢 Baixa</option>
+                </select>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-weight:500; margin-bottom:4px; font-size:13px;">Progresso (%)</label>
+                <input type="number" name="progresso" id="edit_progresso" min="0" max="100" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px;">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="submit" style="flex:1; padding:14px; background:linear-gradient(135deg,#1a2a3a,#2c4458); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾 Salvar</button>
+                <button type="button" onclick="document.getElementById('modalEdit').style.display='none';" style="flex:1; padding:14px; background:#f1f4f9; color:#64748b; border:none; border-radius:10px; font-weight:600; cursor:pointer;">✖ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openEditModal(id) {
+        fetch(`/materias/edit/${id}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('edit_id').value = data.id;
+                document.getElementById('edit_nome').value = data.nome || '';
+                document.getElementById('edit_professor').value = data.professor || '';
+                document.getElementById('edit_topicos').value = data.topicos || '';
+                document.getElementById('edit_carga_horaria').value = data.carga_horaria || 4;
+                document.getElementById('edit_prioridade').value = data.prioridade || 'medium';
+                document.getElementById('edit_progresso').value = data.progresso || 0;
+                document.getElementById('modalEdit').style.display = 'flex';
+            })
+            .catch(function(error) {
+                alert('Erro ao carregar os dados da matéria.');
+                console.error('Erro:', error);
+            });
+    }
+
+    function salvarEdicao(event) {
+        event.preventDefault();
+        var id = document.getElementById('edit_id').value;
+        var payload = {
+            nome: document.getElementById('edit_nome').value,
+            professor: document.getElementById('edit_professor').value,
+            topicos: document.getElementById('edit_topicos').value,
+            carga_horaria: document.getElementById('edit_carga_horaria').value,
+            prioridade: document.getElementById('edit_prioridade').value,
+            progresso: document.getElementById('edit_progresso').value,
+        };
+        fetch(`/materias/edit/${id}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Matéria atualizada com sucesso!');
+                window.location.reload();
+            } else {
+                alert('❌ Erro ao salvar a matéria.');
+            }
+        })
+        .catch(function(error) {
+            alert('❌ Erro ao salvar a matéria.');
+            console.error('Erro:', error);
+        });
+        return false;
+    }
+
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { document.getElementById('modal').style.display = 'none'; }
+        if (e.key === 'Escape') {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('modalEdit').style.display = 'none';
+        }
     });
     document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) { this.style.display = 'none'; }
+    });
+    document.getElementById('modalEdit').addEventListener('click', function(e) {
         if (e.target === this) { this.style.display = 'none'; }
     });
 </script>

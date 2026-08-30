@@ -212,7 +212,7 @@
                 </div>
                 {% if atividades %}
                     {% for atividade in atividades %}
-                    <div class="activity-card" style="border-color: #2563eb40;">
+                    <div class="activity-card" data-id="{{ atividade.id }}" onclick="deleteAtividade({{ atividade.id }})" style="border-color: #2563eb40; cursor:pointer;">
                         <div class="status-dot" style="background:#2563eb;"></div>
                         <div class="time">{{ atividade.hora_inicio|time:"H:i" }} - {{ atividade.hora_fim|time:"H:i" }}</div>
                         <div class="title">{{ atividade.titulo }}</div>
@@ -323,16 +323,11 @@
         }
     });
 
-    // Função para excluir atividade (quando clicar no card)
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.activity-card').forEach(function(card) {
-            card.addEventListener('click', function() {
-                if (confirm('⚠️ Deseja remover esta atividade?')) {
-                    // Pegar o ID da atividade (precisa ser passado no template)
-                    alert('Funcionalidade de exclusão em desenvolvimento');
-                }
-            });
-        });
-    });
+    // Função para excluir atividade
+    function deleteAtividade(id) {
+        if (confirm('⚠️ Deseja remover esta atividade?')) {
+            window.location.href = `/cronogramas/delete/${id}/`;
+        }
+    }
 </script>
 {% endblock %}
