@@ -1,0 +1,215 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — SIOE{% endblock %}
+
+{% block content %}
+<style>
+    .hello {
+        display: flex; align-items: center; justify-content: space-between; gap: 24px;
+        flex-wrap: wrap;
+        padding: 26px 28px;
+        margin-bottom: 26px;
+        border-radius: var(--r-xl);
+        background:
+            radial-gradient(500px 200px at 0% 0%, var(--accent-soft), transparent 70%),
+            var(--panel);
+        border: 1px solid var(--stroke);
+        position: relative; overflow: hidden;
+        box-shadow: var(--sh-1);
+    }
+    .hello::after {
+        content: '';
+        position: absolute; right: -70px; top: -70px;
+        width: 240px; height: 240px;
+        background: radial-gradient(circle, rgba(53,221,242,.30), transparent 65%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .hello-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 7px 15px; border-radius: 99px;
+        background: var(--panel-2); border: 1px solid var(--stroke);
+        font-size: 12.5px; font-weight: 600; color: var(--txt-2);
+        margin-bottom: 12px;
+    }
+    .hello h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.2; }
+    .hello h2 em {
+        font-style: normal;
+        background: var(--accent-grad-full);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .hello p { color: var(--txt-3); font-size: 14.5px; margin-top: 6px; max-width: 540px; }
+    .hello-actions { display: flex; gap: 10px; flex-wrap: wrap; z-index: 1; }
+
+    .list-item {
+        display: flex; align-items: center; gap: 14px;
+        padding: 13px 14px;
+        border-radius: 14px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        transition: all .22s ease;
+        margin-bottom: 10px;
+    }
+    .list-item:hover { border-color: var(--stroke-2); transform: translateX(4px); }
+    .li-time {
+        font-family: var(--font-display); font-weight: 600; font-size: 13px;
+        color: var(--accent); background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        padding: 6px 10px; border-radius: 9px; white-space: nowrap;
+    }
+    .li-body { flex: 1; min-width: 0; }
+    .li-title { font-size: 14.5px; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .li-sub { font-size: 12.5px; color: var(--txt-3); }
+    .li-done { opacity: .55; }
+    .li-done .li-title { text-decoration: line-through; }
+
+    .goal-mini { padding: 15px; border-radius: 14px; background: var(--panel); border: 1px solid var(--stroke); margin-bottom: 10px; }
+    .goal-mini:hover { border-color: var(--stroke-2); }
+    .goal-mini .gm-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .goal-mini .gm-title { font-size: 14.5px; font-weight: 600; color: var(--txt); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 22px; }
+    .quick a {
+        display: flex; align-items: center; gap: 12px;
+        padding: 16px 18px;
+        border-radius: 16px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        color: var(--txt); text-decoration: none;
+        font-size: 14px; font-weight: 600;
+        transition: all .22s ease;
+    }
+    .quick a:hover { transform: translateY(-4px); border-color: var(--stroke-2); box-shadow: 0 14px 34px rgba(0,0,0,.3); }
+    .quick .qi {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: grid; place-items: center; font-size: 19px;
+        background: var(--accent-soft); border: 1px solid var(--stroke);
+    }
+
+    .empty-inline { text-align: center; padding: 34px 18px; color: var(--txt-3); }
+    .empty-inline img { width: 190px; max-width: 80%; margin: 0 auto 8px; display: block; opacity: .95; }
+    .empty-inline p { font-size: 14px; line-height: 1.6; }
+    .empty-inline .btn { margin-top: 16px; }
+
+    @media (max-width: 640px) { .hello { padding: 22px 20px; } }
+</style>
+
+<!-- Saudação -->
+<section class="hello fade-in">
+    <div>
+        <span class="hello-badge" title="{{ pontos }} pontos{% if proximo_limiar %} · próximo nível aos {{ proximo_limiar }} pontos ({{ nivel_progresso }}% do caminho){% else %} · nível máximo!{% endif %}"><svg class="ico-svg" aria-hidden="true"><use href="#i-sparkles"/></svg> Nível: {{ nivel }} · {{ pontos }} pts</span>
+        <h2>Olá, <em>{{ user.get_full_name|default:user.username }}</em></h2>
+        <p>Seu painel de estudos está pronto. Acompanhe matérias, cronograma e metas sem perder o ritmo.</p>
+    </div>
+    <div class="hello-actions">
+        <a class="btn btn-primary" href="{% url 'core:cronogramas' %}"><svg class="ico-svg"><use href="#i-calendar"/></svg> Montar cronograma</a>
+        <a class="btn btn-ghost" href="{% url 'core:materias' %}"><svg class="ico-svg"><use href="#i-book"/></svg> Minhas matérias</a>
+    </div>
+</section>
+
+<!-- Estatísticas -->
+<section class="stats fade-in">
+    <div class="card stat card--glow">
+        <div class="stat-top">
+            <span class="stat-ico"><svg class="ico-svg"><use href="#i-book"/></svg></span>
+            <span class="badge badge-info">cadastradas</span>
+        </div>
+        <div class="stat-val mono">{{ total_materias|default:0 }}</div>
+        <div class="stat-label">Matérias</div>
+    </div>
+    <div class="card stat card--glow">
+        <div class="stat-top">
+            <span class="stat-ico"><svg class="ico-svg"><use href="#i-calendar"/></svg></span>
+            <span class="badge">agendadas</span>
+        </div>
+        <div class="stat-val mono">{{ total_atividades|default:0 }}</div>
+        <div class="stat-label">Atividades</div>
+    </div>
+    <div class="card stat card--glow">
+        <div class="stat-top">
+            <span class="stat-ico"><svg class="ico-svg"><use href="#i-target"/></svg></span>
+            <span class="badge">ativas</span>
+        </div>
+        <div class="stat-val mono">{{ total_metas|default:0 }}</div>
+        <div class="stat-label">Metas</div>
+    </div>
+    <div class="card stat card--glow">
+        <div class="stat-top">
+            <span class="stat-ico"><svg class="ico-svg"><use href="#i-zap"/></svg></span>
+            <span class="badge {% if progresso_medio >= 70 %}badge-ok{% elif progresso_medio >= 40 %}badge-warn{% else %}badge-danger{% endif %}">
+                <span class="dot"></span> geral
+            </span>
+        </div>
+        <div class="stat-val mono">{{ progresso_medio|default:0 }}<span class="unit">%</span></div>
+        <div class="stat-label">Progresso médio</div>
+    </div>
+</section>
+
+<!-- Conteúdo principal -->
+<section class="grid grid-wide fade-in">
+    <div class="card">
+        <div class="card-head">
+            <h3 class="card-title">Cronograma de hoje<span class="sub">O que está planejado para agora</span></h3>
+            <a class="btn btn-ghost btn-sm" href="{% url 'core:cronogramas' %}">Ver tudo</a>
+        </div>
+
+        {% if atividades_hoje %}
+            {% for a in atividades_hoje %}
+            <div class="list-item{% if a.concluida %} li-done{% endif %}">
+                <span class="li-time">{{ a.hora_inicio|time:"H:i" }}</span>
+                <span class="li-body">
+                    <span class="li-title">{{ a.titulo }}</span>
+                    <span class="li-sub">{{ a.materia.nome|default:"Sem matéria" }} · até {{ a.hora_fim|time:"H:i" }}</span>
+                </span>
+                {% if a.concluida %}<span class="badge badge-ok"><svg class="ico-svg" aria-hidden="true"><use href="#i-check"></use></svg> Feito</span>{% else %}<span class="badge badge-info">Em aberto</span>{% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-inline">
+                <img src="{% static 'core/img/empty-agenda.svg' %}" alt="">
+                <p>Nenhuma atividade agendada para hoje.<br>Comece criando seu cronograma!</p>
+                <a class="btn btn-primary" href="{% url 'core:cronogramas' %}"><svg class="ico-svg" aria-hidden="true"><use href="#i-plus"></use></svg> Criar atividade</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h3 class="card-title">Metas ativas<span class="sub">Seu progresso em andamento</span></h3>
+            <a class="btn btn-ghost btn-sm" href="{% url 'core:metas' %}">Ver todas</a>
+        </div>
+
+        {% if metas_ativas %}
+            {% for m in metas_ativas %}
+            <div class="goal-mini">
+                <div class="gm-top">
+                    <span class="gm-title">{{ m.titulo }}</span>
+                    {% if m.status == 'completed' %}<span class="badge badge-ok">Concluída</span>
+                    {% elif m.status == 'behind' %}<span class="badge badge-danger">Atrasada</span>
+                    {% elif m.status == 'at-risk' %}<span class="badge badge-warn">Em risco</span>
+                    {% else %}<span class="badge badge-info">No caminho</span>{% endif %}
+                </div>
+                <div class="progress-top"><span>Meta {{ m.meta_progresso }}%</span><span class="percent">{{ m.progresso_atual }}%</span></div>
+                <div class="progress"><div style="width: {{ m.progresso_atual }}%;"></div></div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-inline">
+                <img src="{% static 'core/img/empty-metas.svg' %}" alt="">
+                <p>Nenhuma meta ativa no momento.<br>Defina suas primeiras metas!</p>
+                <a class="btn btn-primary" href="{% url 'core:metas' %}"><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg> Criar meta</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Acesso rápido -->
+<section class="quick fade-in">
+    <a href="{% url 'core:materias' %}"><span class="qi"><svg class="ico-svg"><use href="#i-book"/></svg></span> Matérias</a>
+    <a href="{% url 'core:cronogramas' %}"><span class="qi"><svg class="ico-svg"><use href="#i-calendar"/></svg></span> Cronograma</a>
+    <a href="{% url 'core:metas' %}"><span class="qi"><svg class="ico-svg"><use href="#i-target"/></svg></span> Metas</a>
+    <a href="{% url 'core:relatorios' %}"><span class="qi"><svg class="ico-svg"><use href="#i-trending-up"/></svg></span> Relatórios</a>
+</section>
+{% endblock %}

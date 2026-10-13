@@ -1,0 +1,265 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Cadastro - SIOE{% endblock %}
+
+{% block nav %}{% endblock %}
+{% block content_class %} main--bare{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cadastro: split-screen sem sidebar */
+    main.main--bare { flex-direction: column; justify-content: center; }
+    main.main--bare .messages { width: min(1180px, calc(100% - 60px)); margin: 18px auto -4px; }
+
+    .auth-wrap {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 34px 30px;
+        display: grid;
+        grid-template-columns: 1.06fr .94fr;
+        gap: 30px;
+        align-items: stretch;
+    }
+
+    /* ---------- Painel esquerdo: ilustração ---------- */
+    .auth-art {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
+        padding: 42px 40px;
+        border-radius: var(--r-xl);
+        background:
+            radial-gradient(460px 320px at 8% 4%, var(--accent-soft), transparent 70%),
+            radial-gradient(420px 320px at 96% 100%, rgba(53,221,242,.16), transparent 62%),
+            var(--panel);
+        border: 1px solid var(--stroke);
+        box-shadow: var(--sh-1), 0 0 44px rgba(53,221,242,.10);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        overflow: hidden;
+        transition: border-color .3s ease, box-shadow .3s ease;
+    }
+    .auth-art:hover { border-color: var(--stroke-2); box-shadow: var(--sh-2), 0 0 54px var(--accent-soft); }
+    .auth-art::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+        background-size: 46px 46px;
+        -webkit-mask-image: radial-gradient(ellipse 85% 70% at 30% 20%, #000 15%, transparent 80%);
+                mask-image: radial-gradient(ellipse 85% 70% at 30% 20%, #000 15%, transparent 80%);
+        pointer-events: none;
+    }
+    .auth-art > * { position: relative; z-index: 1; }
+
+    .auth-brand { display: flex; align-items: center; gap: 12px; }
+    .auth-brand .brand-logo {
+        width: 46px; height: 46px;
+        border-radius: 14px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        display: grid; place-items: center;
+        box-shadow: 0 0 24px rgba(53,221,242,.24);
+    }
+    .auth-brand .brand-logo img { width: 28px; height: 28px; display: block; }
+    .auth-brand .brand-name { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+    .auth-brand .brand-name span { color: var(--accent); }
+    .auth-brand .brand-sub { display: block; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--txt-3); font-weight: 500; }
+
+    .auth-hero {
+        width: 100%;
+        max-width: 440px;
+        margin: 4px auto 0;
+        display: block;
+        filter: drop-shadow(0 22px 46px rgba(0,0,0,.45)) drop-shadow(0 0 26px rgba(53,221,242,.16));
+        animation: floatY 6.5s ease-in-out infinite;
+    }
+
+    .auth-title {
+        font-family: var(--font-display);
+        font-size: clamp(24px, 2.6vw, 31px);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .auth-title em {
+        font-style: normal;
+        background: var(--accent-grad-full);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .auth-lead { color: var(--txt-3); font-size: 14.5px; max-width: 460px; }
+
+    .auth-points { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+    .auth-point {
+        display: flex; align-items: center; gap: 11px;
+        padding: 11px 14px;
+        border-radius: 14px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        font-size: 13.5px; font-weight: 500; color: var(--txt-2);
+        transition: all .22s ease;
+    }
+    .auth-point:hover { transform: translateY(-3px); border-color: var(--stroke-2); color: var(--txt); box-shadow: var(--sh-1); }
+    .auth-point .pi {
+        width: 30px; height: 30px; flex-shrink: 0;
+        display: grid; place-items: center;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        font-size: 15px;
+    }
+
+    /* ---------- Painel direito: formulário ---------- */
+    .auth-card {
+        padding: 32px 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: var(--sh-2), 0 0 46px var(--accent-soft);
+    }
+    .auth-card::before { background: linear-gradient(160deg, rgba(255,255,255,.07), transparent 42%); }
+
+    .auth-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .auth-logo { width: 40px; height: 40px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--stroke); display: grid; place-items: center; box-shadow: 0 0 22px rgba(53,221,242,.22); }
+    .auth-logo img { width: 24px; height: 24px; display: block; }
+
+    .auth-h1 {
+        font-family: var(--font-display);
+        font-size: clamp(24px, 2.8vw, 30px);
+        font-weight: 700;
+        line-height: 1.15;
+        margin-bottom: 4px;
+    }
+    .auth-h1 em {
+        font-style: normal;
+        background: var(--accent-grad-full);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .auth-sub { color: var(--txt-3); font-size: 14.5px; margin-bottom: 22px; }
+
+    .auth-card .field { margin-bottom: 13px; }
+    .auth-card .field:last-of-type { margin-bottom: 20px; }
+    .auth-card .btn-primary { margin-bottom: 4px; }
+
+    .auth-foot { text-align: center; margin-top: 16px; font-size: 14px; color: var(--txt-3); }
+    .auth-foot a { font-weight: 600; text-decoration: none; }
+    .auth-foot a:hover { text-decoration: underline; }
+
+    .auth-terms {
+        display: flex; align-items: center; gap: 8px;
+        margin-top: 16px; padding: 10px 13px;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        font-size: 12.5px; color: var(--txt-2);
+    }
+
+    @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+    @media (max-width: 960px) {
+        .auth-wrap { grid-template-columns: 1fr; gap: 22px; padding: 26px 18px; }
+        .auth-art { padding: 30px 26px; gap: 16px; }
+        .auth-hero { max-width: 300px; }
+        .auth-card { padding: 26px 22px; }
+        main.main--bare .messages { width: min(1180px, calc(100% - 36px)); }
+    }
+    @media (max-width: 520px) {
+        .auth-points { display: none; }
+        .auth-art { padding: 24px 20px; }
+        .auth-hero { max-width: 220px; }
+        .auth-card { padding: 22px 18px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-wrap fade-in">
+
+    <!-- Painel de ilustração -->
+    <div class="auth-art">
+        <div class="auth-brand">
+            <span class="brand-logo"><img src="{% static 'core/img/logo.svg' %}" alt="SIOE"></span>
+            <span>
+                <span class="brand-name">SIOE<span>.</span></span>
+                <span class="brand-sub">Sistema de Organização de Estudos</span>
+            </span>
+        </div>
+
+        <!--
+          SLOT DE FOTO (opcional):
+          coloque um arquivo chamado hero-foto.jpg em  static/core/img/
+          e ele substitui a ilustração automaticamente.
+          Se o arquivo não existir, a ilustração abaixo continua aparecendo.
+        -->
+        <img class="auth-hero" src="{% static 'core/img/hero-foto.jpg' %}" alt=""
+             onerror="this.remove()" onload="this.nextElementSibling.style.display='none'">
+        <img class="auth-hero" src="{% static 'core/img/hero-estudos.svg' %}" alt="Ilustração de estudos organizados">
+
+        <div>
+            <h2 class="auth-title">Comece hoje sua rotina de estudos <em>em outro nível</em>.</h2>
+            <p class="auth-lead">Leva menos de um minuto: informe seus dados e comece a organizar matérias, cronograma e metas.</p>
+        </div>
+
+        <div class="auth-points">
+            <div class="auth-point"><span class="pi"><svg class="ico-svg" aria-hidden="true"><use href="#i-zap"></use></svg></span> Cadastro rápido e gratuito</div>
+            <div class="auth-point"><span class="pi"><svg class="ico-svg" aria-hidden="true"><use href="#i-bar-chart"></use></svg></span> Relatórios de progresso automáticos</div>
+            <div class="auth-point"><span class="pi"><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg></span> Metas adaptadas ao seu objetivo</div>
+        </div>
+    </div>
+
+    <!-- Card de formulário -->
+    <div class="card card--glow auth-card">
+        <div class="auth-top">
+            <span class="auth-logo"><img src="{% static 'core/img/logo.svg' %}" alt="SIOE"></span>
+            <span class="badge badge-ok"><span class="dot"></span> 100% gratuito</span>
+        </div>
+
+        <h1 class="auth-h1"><svg class="ico-svg" aria-hidden="true"><use href="#i-note"></use></svg> Criar Conta</h1>
+        <p class="auth-sub">Preencha os dados para começar</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="field">
+                <label class="label" for="first_name">Nome Completo *</label>
+                <input class="input" type="text" id="first_name" name="first_name" placeholder="Seu nome completo" required>
+            </div>
+            <div class="field">
+                <label class="label" for="email">E-mail *</label>
+                <input class="input" type="email" id="email" name="email" placeholder="seu.email@exemplo.com" required>
+            </div>
+            <div class="field">
+                <label class="label" for="password1">Senha *</label>
+                <input class="input" type="password" id="password1" name="password1" placeholder="Mínimo 8 caracteres" required>
+            </div>
+            <div class="field">
+                <label class="label" for="password2">Confirmar Senha *</label>
+                <input class="input" type="password" id="password2" name="password2" placeholder="Digite novamente" required>
+            </div>
+            <div class="field">
+                <label class="label" for="objetivo">Objetivo Principal</label>
+                <select class="select" id="objetivo" name="objetivo">
+                    <option value="ENEM">ENEM</option>
+                    <option value="VESTIBULAR">Vestibular</option>
+                    <option value="CONCURSO">Concurso</option>
+                    <option value="ESTUDOS_GERAIS" selected>Estudos Gerais</option>
+                </select>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Criar Conta</button>
+        </form>
+
+        <div class="auth-terms"><svg class="ico-svg" aria-hidden="true"><use href="#i-lock"></use></svg> Seus dados são usados apenas para a sua conta no SIOE.</div>
+
+        <hr class="divider">
+
+        <p class="auth-foot">
+            Já possui conta? <a href="{% url 'core:login' %}">Faça login</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

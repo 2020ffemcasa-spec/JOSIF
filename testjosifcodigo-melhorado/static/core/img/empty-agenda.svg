@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" fill="none" role="img" aria-label="Agenda vazia">
+  <defs>
+    <linearGradient id="esA" x1="40" y1="20" x2="220" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35DDF2"/><stop offset="1" stop-color="#2878FF"/>
+    </linearGradient>
+    <radialGradient id="esG" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#2878FF" stop-opacity=".35"/><stop offset="1" stop-color="#2878FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="130" cy="95" r="86" fill="url(#esG)"/>
+  <rect x="58" y="44" width="144" height="118" rx="18" fill="#16233A" stroke="url(#esA)" stroke-width="3"/>
+  <path d="M58 76h144" stroke="url(#esA)" stroke-width="3"/>
+  <path d="M96 32v24M164 32v24" stroke="url(#esA)" stroke-width="7" stroke-linecap="round"/>
+  <g fill="#35DDF2" fill-opacity=".55">
+    <rect x="80" y="94" width="24" height="20" rx="6"/>
+    <rect x="118" y="94" width="24" height="20" rx="6" fill-opacity=".3"/>
+    <rect x="156" y="94" width="24" height="20" rx="6" fill-opacity=".3"/>
+    <rect x="80" y="126" width="24" height="20" rx="6" fill-opacity=".3"/>
+    <rect x="118" y="126" width="24" height="20" rx="6" fill-opacity=".18"/>
+    <rect x="156" y="126" width="24" height="20" rx="6" fill-opacity=".18"/>
+  </g>
+  <circle cx="196" cy="146" r="26" fill="#16233A" stroke="url(#esA)" stroke-width="3"/>
+  <path d="M196 132v14l10 7" stroke="#35DDF2" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 620" fill="none" role="img" aria-label="Ilustração do painel de estudos SIOE">
+  <defs>
+    <linearGradient id="hLine" x1="40" y1="40" x2="680" y2="580" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35DDF2"/>
+      <stop offset=".5" stop-color="#2878FF"/>
+      <stop offset="1" stop-color="#35DDF2"/>
+    </linearGradient>
+    <linearGradient id="hPanel" x1="120" y1="120" x2="620" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17243A" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#0D1727" stop-opacity=".94"/>
+    </linearGradient>
+    <linearGradient id="hBar" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#2878FF"/>
+      <stop offset="1" stop-color="#35DDF2"/>
+    </linearGradient>
+    <radialGradient id="hGlowA" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#35DDF2" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#35DDF2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hGlowB" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#2878FF" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#2878FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hRing" x1="100" y1="60" x2="620" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35DDF2" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#2878FF" stop-opacity=".15"/>
+    </linearGradient>
+  </defs>
+
+  <!-- brilhos de fundo -->
+  <circle cx="170" cy="150" r="180" fill="url(#hGlowA)"/>
+  <circle cx="570" cy="470" r="200" fill="url(#hGlowB)"/>
+
+  <!-- órbitas -->
+  <ellipse cx="360" cy="310" rx="300" ry="230" stroke="url(#hRing)" stroke-width="1.4" stroke-dasharray="6 10" opacity=".75"/>
+  <ellipse cx="360" cy="310" rx="235" ry="180" stroke="url(#hRing)" stroke-width="1.2" opacity=".45"/>
+
+  <!-- grade sutil -->
+  <g stroke="#2878FF" stroke-opacity=".12">
+    <path d="M60 120h600M60 200h600M60 280h600M60 360h600M60 440h600M60 520h600"/>
+    <path d="M120 60v500M200 60v500M280 60v500M360 60v500M440 60v500M520 60v500M600 60v500"/>
+  </g>
+
+  <!-- painel principal -->
+  <g>
+    <rect x="150" y="140" width="420" height="330" rx="26" fill="url(#hPanel)" stroke="#2878FF" stroke-opacity=".4" stroke-width="1.6"/>
+    <!-- barra do topo -->
+    <rect x="150" y="140" width="420" height="52" rx="26" fill="#ffffff" fill-opacity=".05"/>
+    <circle cx="182" cy="166" r="6" fill="#E5484D"/>
+    <circle cx="204" cy="166" r="6" fill="#EE9B2E"/>
+    <circle cx="226" cy="166" r="6" fill="#22B573"/>
+    <rect x="262" y="158" width="180" height="16" rx="8" fill="#ffffff" fill-opacity=".08"/>
+
+    <!-- gráfico de barras -->
+    <g>
+      <rect x="186" y="330" width="34" height="90" rx="12" fill="url(#hBar)" opacity=".45"/>
+      <rect x="238" y="292" width="34" height="128" rx="12" fill="url(#hBar)" opacity=".65"/>
+      <rect x="290" y="250" width="34" height="170" rx="12" fill="url(#hBar)" opacity=".9"/>
+      <rect x="342" y="310" width="34" height="110" rx="12" fill="url(#hBar)" opacity=".55"/>
+      <path d="M186 372 255 336 307 300 359 350 445 268" stroke="#35DDF2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="445" cy="268" r="9" fill="#0D1727" stroke="#35DDF2" stroke-width="4"/>
+    </g>
+
+    <!-- barra de progresso -->
+    <rect x="186" y="434" width="348" height="12" rx="6" fill="#ffffff" fill-opacity=".08"/>
+    <rect x="186" y="434" width="238" height="12" rx="6" fill="url(#hBar)"/>
+
+    <!-- checklist lateral -->
+    <g>
+      <rect x="404" y="220" width="130" height="16" rx="8" fill="#ffffff" fill-opacity=".10"/>
+      <rect x="404" y="248" width="96" height="16" rx="8" fill="#ffffff" fill-opacity=".07"/>
+      <rect x="404" y="276" width="112" height="16" rx="8" fill="#ffffff" fill-opacity=".05"/>
+    </g>
+  </g>
+
+  <!-- card flutuante: progresso -->
+  <g transform="translate(46 372)">
+    <rect width="196" height="104" rx="22" fill="#0D1727" fill-opacity=".96" stroke="#2878FF" stroke-opacity=".5" stroke-width="1.5"/>
+    <circle cx="46" cy="52" r="26" stroke="#2878FF" stroke-opacity=".35" stroke-width="8"/>
+    <path d="M46 26a26 26 0 0 1 22 40" stroke="#2878FF" stroke-width="8" stroke-linecap="round"/>
+    <text x="46" y="58" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#E9F0FF">78%</text>
+    <rect x="88" y="34" width="86" height="14" rx="7" fill="#ffffff" fill-opacity=".12"/>
+    <rect x="88" y="58" width="60" height="12" rx="6" fill="#ffffff" fill-opacity=".07"/>
+  </g>
+
+  <!-- card flutuante: sequência -->
+  <g transform="translate(470 96)">
+    <rect width="204" height="96" rx="22" fill="#0D1727" fill-opacity=".96" stroke="#35DDF2" stroke-opacity=".5" stroke-width="1.5"/>
+    <path d="M40 66c-14 0-22-10-22-22 0-14 12-20 14-32 10 6 12 14 12 20 6-4 8-10 8-16 12 8 16 22 12 34-3 10-13 16-24 16Z"
+          fill="#35DDF2" fill-opacity=".9"/>
+    <rect x="84" y="30" width="96" height="14" rx="7" fill="#ffffff" fill-opacity=".12"/>
+    <rect x="84" y="54" width="66" height="12" rx="6" fill="#ffffff" fill-opacity=".07"/>
+  </g>
+
+  <!-- partículas -->
+  <g fill="#35DDF2">
+    <circle cx="96" cy="196" r="4"/>
+    <circle cx="638" cy="330" r="5"/>
+    <circle cx="332" cy="86" r="3.5"/>
+  </g>
+  <g fill="#2878FF">
+    <circle cx="640" cy="188" r="4"/>
+    <circle cx="120" cy="536" r="4.5"/>
+    <circle cx="548" cy="548" r="3.5"/>
+  </g>
+</svg>

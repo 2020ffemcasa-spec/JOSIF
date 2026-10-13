@@ -1,0 +1,1081 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Configurações - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =========================================================
+       CONFIGURAÇÕES — design system "Neon Future"
+       ========================================================= */
+
+    /* ---------- Abas (pílulas) ---------- */
+    .config-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+        padding: 8px 10px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .config-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border: 1px solid var(--stroke);
+        border-radius: 99px;
+        background: var(--panel-2);
+        color: var(--txt-2);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .22s ease;
+    }
+    .config-tab:hover {
+        background: var(--panel-2);
+        border-color: var(--stroke-2);
+        color: var(--txt);
+        transform: translateY(-2px);
+    }
+    .config-tab.active {
+        background: var(--accent-grad-full);
+        border-color: transparent;
+        color: var(--accent-contrast);
+        box-shadow: 0 8px 22px var(--accent-soft);
+    }
+
+    /* ---------- Seções ---------- */
+    .config-section {
+        display: none;
+        animation: fadeIn .4s ease;
+    }
+    .config-section.active { display: block; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Cards ---------- */
+    .config-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-xl);
+        padding: 26px 28px;
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        margin-bottom: 24px;
+        transition: all .3s ease;
+    }
+    .config-card:hover {
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2);
+    }
+    .config-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--stroke);
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .config-card-header h3 {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--txt);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .config-card-header p {
+        font-size: 13px;
+        color: var(--txt-3);
+        font-weight: 400;
+        margin-top: 2px;
+    }
+
+    /* ---------- Formulários ---------- */
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--txt-2);
+    }
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        font-family: inherit;
+        font-size: 14.5px;
+        color: var(--txt);
+        background: var(--panel);
+        border: 1px solid var(--stroke-2);
+        border-radius: 12px;
+        outline: none;
+        transition: all .2s ease;
+    }
+    .form-input::placeholder { color: var(--txt-3); }
+    .form-input:focus {
+        border-color: var(--accent);
+        background-color: var(--panel-2);
+        box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    select.form-input {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--txt-3) 50%), linear-gradient(135deg, var(--txt-3) 50%, transparent 50%);
+        background-position: calc(100% - 20px) calc(50% + 2px), calc(100% - 14px) calc(50% + 2px);
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        padding-right: 38px;
+    }
+    select.form-input option {
+        background: var(--panel-solid);
+        color: var(--txt);
+    }
+    [data-theme="dark"] .form-input::-webkit-calendar-picker-indicator,
+    [data-theme="blue"] .form-input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        opacity: .7;
+        cursor: pointer;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* ---------- Perfil / Avatar ---------- */
+    .profile-section {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        margin-bottom: 26px;
+        flex-wrap: wrap;
+    }
+    .avatar-container {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 4px var(--accent-soft), var(--sh-1);
+    }
+    .avatar-preview {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .avatar-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: var(--accent-soft);
+    }
+    .avatar-placeholder img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--panel-solid);
+        border: 2px solid var(--stroke-2);
+        border-radius: 50%;
+        color: var(--txt);
+        font-size: 14px;
+        box-shadow: var(--sh-1);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .3s ease;
+    }
+    .avatar-edit-btn:hover {
+        transform: scale(1.12);
+        border-color: var(--accent-2);
+        box-shadow: 0 0 16px var(--accent-soft);
+    }
+    .profile-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--txt);
+        margin-bottom: 2px;
+    }
+    .profile-email {
+        font-size: 14px;
+        color: var(--txt-3);
+    }
+
+    /* ---------- Toggles ---------- */
+    .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--stroke);
+        gap: 16px;
+    }
+    .toggle-group:last-child { border-bottom: none; }
+    .toggle-info h4 {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--txt);
+        margin-bottom: 2px;
+    }
+    .toggle-info p {
+        font-size: 13px;
+        color: var(--txt-3);
+    }
+    .toggle {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+    .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: var(--panel-solid);
+        border: 1px solid var(--stroke-2);
+        border-radius: 99px;
+        transition: all .3s ease;
+    }
+    .toggle-slider::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: var(--txt-3);
+        border-radius: 50%;
+        transition: all .3s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    }
+    .toggle input:checked + .toggle-slider {
+        background: var(--accent-soft);
+        border-color: var(--accent-2);
+        box-shadow: 0 0 16px var(--accent-soft);
+    }
+    .toggle input:checked + .toggle-slider::before {
+        background: var(--accent-grad-full);
+        box-shadow: 0 0 12px var(--accent-2);
+        transform: translateX(22px);
+    }
+
+    /* ---------- Temas ---------- */
+    .theme-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    .theme-option {
+        border: 2px solid var(--stroke);
+        border-radius: var(--r);
+        padding: 18px 14px;
+        text-align: center;
+        cursor: pointer;
+        background: var(--panel-2);
+        transition: all .25s ease;
+    }
+    .theme-option:hover {
+        border-color: var(--accent);
+        transform: translateY(-3px);
+        box-shadow: var(--sh-1);
+    }
+    .theme-option.active {
+        border-color: var(--accent-2);
+        background: var(--accent-soft);
+        box-shadow: 0 10px 26px var(--accent-soft);
+    }
+    .theme-preview {
+        width: 100%;
+        height: 60px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border: 1px solid var(--stroke);
+        position: relative;
+        overflow: hidden;
+    }
+    .theme-preview::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(128,148,180,.35);
+    }
+    .theme-light .theme-preview { background: linear-gradient(135deg, #eef2f8, #d7e0ee); }
+    .theme-dark .theme-preview { background: linear-gradient(135deg, #0c1220, #05070e); }
+    .theme-blue .theme-preview { background: linear-gradient(135deg, #050d18 0%, #081a2e 45%, color-mix(in srgb, var(--accent) 60%, #061221) 100%); }
+    .theme-option span {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--txt);
+    }
+    .theme-note {
+        font-size: 11.5px;
+        color: var(--txt-3);
+        margin-top: 4px;
+    }
+    .theme-info {
+        margin-top: 14px;
+        padding: 10px 14px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        font-size: 13.5px;
+        color: var(--txt-2);
+    }
+    .theme-info strong {
+        font-weight: 700;
+        color: var(--txt);
+    }
+
+    /* ---------- Cores ---------- */
+    .color-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+    .color-option {
+        width: 44px;
+        height: 44px;
+        border: 3px solid transparent;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .25s ease;
+        box-shadow: var(--sh-1);
+    }
+    .color-option:hover { transform: scale(1.12); }
+    .color-option.active {
+        border-color: var(--txt) !important;
+        box-shadow: 0 0 0 3px var(--accent-soft), var(--sh-2) !important;
+        transform: scale(1.06);
+    }
+    .color-option.active::after {
+        content: "✓";
+        color: var(--txt);
+        font-weight: 700;
+        font-size: 18px;
+        text-shadow: 0 1px 4px rgba(0,0,0,.45);
+    }
+    .color-dot {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-left: 8px;
+        vertical-align: middle;
+        border-radius: 50%;
+        border: 1px solid var(--stroke-2);
+    }
+
+    /* ---------- Ações ---------- */
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    /* ---------- Zona de perigo ---------- */
+    .danger-zone {
+        border: 1px solid rgba(229,72,77,.35);
+        border-radius: var(--r-xl);
+        padding: 26px 28px;
+        background: rgba(229,72,77,.07);
+        margin-top: 8px;
+    }
+    .danger-zone h3 {
+        color: var(--danger);
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .danger-zone p {
+        color: var(--txt-3);
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+    .danger-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 16px 0;
+        border-bottom: 1px solid rgba(229,72,77,.22);
+    }
+    .danger-item:last-child { border-bottom: none; }
+    .danger-item-info h4 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--txt);
+        margin-bottom: 2px;
+    }
+    .danger-item-info p {
+        font-size: 13px;
+        color: var(--txt-3);
+        margin-bottom: 0;
+    }
+
+    /* ---------- Sobre ---------- */
+    .about-card {
+        text-align: center;
+        padding: 40px 30px;
+    }
+    .about-logo {
+        display: grid;
+        place-items: center;
+        margin-bottom: 14px;
+    }
+    .about-logo img {
+        width: 76px;
+        height: 76px;
+        display: block;
+        border-radius: 20px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        padding: 12px;
+        box-shadow: 0 0 30px var(--accent-soft);
+    }
+    .about-name {
+        font-family: var(--font-display);
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        background: var(--accent-grad-full);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        margin-bottom: 4px;
+    }
+    .about-version {
+        font-size: 13.5px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--txt-3);
+        margin-bottom: 18px;
+    }
+    .about-description {
+        font-size: 15px;
+        color: var(--txt-2);
+        line-height: 1.8;
+        max-width: 520px;
+        margin: 0 auto 25px;
+    }
+    .about-description strong { color: var(--txt); }
+    .about-links {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .about-link {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent);
+        text-decoration: none;
+        padding: 7px 14px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        transition: all .22s ease;
+    }
+    .about-link:hover {
+        color: var(--txt);
+        border-color: var(--stroke-2);
+        transform: translateY(-2px);
+    }
+
+    .theme-preview-demo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 12px 16px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        color: var(--txt-2);
+        font-size: 13.5px;
+    }
+
+    #fotoInput { display: none; }
+    .cor-salva-info {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        border-radius: 10px;
+    }
+
+    /* ---------- Responsivo ---------- */
+    @media (max-width: 800px) {
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+        .theme-options { grid-template-columns: 1fr; gap: 12px; }
+        .profile-section { flex-direction: column; text-align: center; }
+        .config-card { padding: 20px; }
+        .config-card-header { flex-direction: column; }
+        .config-tabs { gap: 6px; padding: 6px 8px; }
+        .config-tab { padding: 8px 14px; font-size: 12.5px; }
+        .danger-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+    @media (max-width: 550px) {
+        .color-options { gap: 8px; }
+        .color-option { width: 36px; height: 36px; }
+        .about-card { padding: 24px 16px; }
+        .about-logo img { width: 62px; height: 62px; }
+        .about-name { font-size: 27px; }
+        .config-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 4px 8px;
+            gap: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .config-tab { white-space: nowrap; padding: 6px 12px; font-size: 12px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<header class="page-head fade-in">
+    <div>
+        <h1 class="page-title"><span class="emoji"><svg class="ico-svg" aria-hidden="true"><use href="#i-settings"></use></svg></span> <em>Configurações</em></h1>
+        <p class="page-sub">Personalize seu perfil, a aparência e as preferências do SIOE.</p>
+    </div>
+    <div class="page-actions">
+        <button onclick="salvarTudo()" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar Tudo</button>
+    </div>
+</header>
+
+<!-- Tabs -->
+<div class="config-tabs fade-in">
+    <button class="config-tab active" onclick="switchTab('perfil', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-user"></use></svg> Perfil</button>
+    <button class="config-tab" onclick="switchTab('aparencia', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-palette"></use></svg> Aparência</button>
+    <button class="config-tab" onclick="switchTab('notificacoes', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-bell"></use></svg> Notificações</button>
+    <button class="config-tab" onclick="switchTab('privacidade', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-lock"></use></svg> Privacidade</button>
+    <button class="config-tab" onclick="switchTab('sobre', this)">ℹ️ Sobre</button>
+</div>
+
+<!-- PERFIL -->
+<div class="config-section active" id="sec-perfil">
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-user"></use></svg> Informações do Perfil</h3>
+                <p>Gerencie suas informações pessoais</p>
+            </div>
+        </div>
+        <div class="profile-section">
+            <div class="avatar-container">
+                {% if perfil.avatar %}
+                    <img class="avatar-preview" src="{{ perfil.avatar.url }}" alt="Avatar" style="border:3px solid {{ config.cor_primaria|default:'#2878FF' }};">
+                {% else %}
+                    <div class="avatar-placeholder avatar-preview" id="avatarPreview" style="border:3px solid {{ config.cor_primaria|default:'#2878FF' }};">
+                        <img src="{% static 'core/img/avatar-default.svg' %}" alt="Foto de perfil padrão">
+                    </div>
+                {% endif %}
+                <label class="avatar-edit-btn" for="fotoInput" title="Alterar foto"><svg class="ico-svg" aria-hidden="true"><use href="#i-camera"></use></svg></label>
+                <input type="file" id="fotoInput" accept="image/*" onchange="uploadFoto(event)">
+            </div>
+            <div>
+                <h4 class="profile-name" id="profileNameDisplay">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="profile-email" id="profileEmailDisplay">{{ user.email }}</p>
+            </div>
+        </div>
+        <form id="perfilForm">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" class="form-input" id="inputName" value="{{ user.get_full_name|default:user.username }}">
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" class="form-input" id="inputEmail" value="{{ user.email }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" class="form-input" id="inputPhone" value="{{ perfil.telefone|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label>Data de Nascimento</label>
+                    <input type="date" class="form-input" id="inputBirth" value="{{ perfil.data_nascimento|date:'Y-m-d' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Instituição de Ensino</label>
+                <input type="text" class="form-input" id="inputSchool" value="{{ perfil.instituicao|default:'' }}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Série / Ano</label>
+                    <select class="form-input" id="inputGrade">
+                        <option value="1EM" {% if perfil.serie == '1EM' %}selected{% endif %}>1º Ano - Ensino Médio</option>
+                        <option value="2EM" {% if perfil.serie == '2EM' %}selected{% endif %}>2º Ano - Ensino Médio</option>
+                        <option value="3EM" {% if perfil.serie == '3EM' %}selected{% endif %}>3º Ano - Ensino Médio</option>
+                        <option value="CURSINHO" {% if perfil.serie == 'CURSINHO' %}selected{% endif %}>Cursinho Pré-Vestibular</option>
+                        <option value="SUPERIOR" {% if perfil.serie == 'SUPERIOR' %}selected{% endif %}>Ensino Superior</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Objetivo Principal</label>
+                    <select class="form-input" id="inputGoal">
+                        <option value="ENEM" {% if perfil.objetivo == 'ENEM' %}selected{% endif %}>ENEM</option>
+                        <option value="VESTIBULAR" {% if perfil.objetivo == 'VESTIBULAR' %}selected{% endif %}>Vestibular</option>
+                        <option value="CONCURSO" {% if perfil.objetivo == 'CONCURSO' %}selected{% endif %}>Concurso</option>
+                        <option value="ESTUDOS_GERAIS" {% if perfil.objetivo == 'ESTUDOS_GERAIS' %}selected{% endif %}>Estudos Gerais</option>
+                    </select>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn btn-primary" onclick="salvarPerfil()"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar Perfil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- APARÊNCIA -->
+<div class="config-section" id="sec-aparencia">
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-palette"></use></svg> Tema</h3>
+                <p>Escolha o tema visual do sistema</p>
+            </div>
+        </div>
+        <div class="theme-options">
+            <div class="theme-option theme-light {% if config.tema == 'light' %}active{% endif %}" data-tema="light" onclick="selectTheme(this, 'light')">
+                <div class="theme-preview"></div>
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-sun"></use></svg> Claro</span>
+                <div class="theme-note">Fundo claro, texto escuro</div>
+            </div>
+
+            <div class="theme-option theme-dark {% if config.tema == 'dark' %}active{% endif %}" data-tema="dark" onclick="selectTheme(this, 'dark')">
+                <div class="theme-preview"></div>
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-moon"></use></svg> Escuro</span>
+                <div class="theme-note">Fundo escuro sólido</div>
+            </div>
+
+            <div class="theme-option theme-blue {% if config.tema == 'blue' %}active{% endif %}" data-tema="blue" onclick="selectTheme(this, 'blue')">
+                <div class="theme-preview"></div>
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-palette"></use></svg> Azul Degradê</span>
+                <div class="theme-note">Azul escuro com degradê da cor escolhida</div>
+            </div>
+        </div>
+        <div class="theme-info">
+            Tema atual: <strong>{{ config.tema|default:'light' }}</strong>
+        </div>
+
+        <div class="color-options">
+            <div class="color-option {% if config.cor_primaria == '#2878FF' %}active{% endif %}" style="background:#2878FF" onclick="selectColor(this, '#2878FF')"></div>
+            <div class="color-option {% if config.cor_primaria == '#7c3aed' %}active{% endif %}" style="background:#7c3aed" onclick="selectColor(this, '#7c3aed')"></div>
+            <div class="color-option {% if config.cor_primaria == '#16a34a' %}active{% endif %}" style="background:#16a34a" onclick="selectColor(this, '#16a34a')"></div>
+            <div class="color-option {% if config.cor_primaria == '#ea580c' %}active{% endif %}" style="background:#ea580c" onclick="selectColor(this, '#ea580c')"></div>
+            <div class="color-option {% if config.cor_primaria == '#e11d48' %}active{% endif %}" style="background:#e11d48" onclick="selectColor(this, '#e11d48')"></div>
+            <div class="color-option {% if config.cor_primaria == '#0891b2' %}active{% endif %}" style="background:#0891b2" onclick="selectColor(this, '#0891b2')"></div>
+            <div class="color-option {% if config.cor_primaria == '#d97706' %}active{% endif %}" style="background:#d97706" onclick="selectColor(this, '#d97706')"></div>
+            <div class="color-option {% if config.cor_primaria == '#334155' %}active{% endif %}" style="background:#334155" onclick="selectColor(this, '#334155')"></div>
+        </div>
+        <div class="theme-info">
+            Cor atual: <strong style="color: {{ config.cor_primaria }};">{{ config.cor_primaria }}</strong>
+            <span class="color-dot" style="background: {{ config.cor_primaria }};"></span>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICAÇÕES - Resumido -->
+<div class="config-section" id="sec-notificacoes">
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-bell"></use></svg> Notificações</h3>
+                <p>Configure seus alertas</p>
+            </div>
+        </div>
+        <div class="toggle-group">
+            <div class="toggle-info"><h4>Notificações por E-mail</h4><p>Receba alertas no seu e-mail</p></div>
+            <label class="toggle"><input type="checkbox" id="inputNotifEmail" {% if config.notificacoes_email %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-group">
+            <div class="toggle-info"><h4>Notificações Push</h4><p>Receba notificações no navegador</p></div>
+            <label class="toggle"><input type="checkbox" id="inputNotifPush" {% if config.notificacoes_push %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-group">
+            <div class="toggle-info"><h4>Lembrete Diário</h4><p>Um aviso todos os dias para não perder o ritmo</p></div>
+            <label class="toggle"><input type="checkbox" id="inputLembreteDiario" {% if config.lembrete_diario %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-group">
+            <div class="toggle-info"><h4>Alertas de Metas Atrasadas</h4><p>Avisar quando uma meta passar do prazo</p></div>
+            <label class="toggle"><input type="checkbox" id="inputAlertaMetas" {% if config.alerta_metas_atrasadas %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+    </div>
+</div>
+
+<!-- PRIVACIDADE -->
+<div class="config-section" id="sec-privacidade">
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-user"></use></svg> Informações da conta</h3>
+                <p>Estes são os dados associados à sua conta</p>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" class="form-input" value="{{ user.get_full_name|default:user.username }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" class="form-input" value="{{ user.email }}" readonly>
+            </div>
+        </div>
+        <p style="color:var(--txt-3); font-size:13px;">Para alterar nome ou e-mail, use a aba <strong>Perfil</strong>.</p>
+    </div>
+
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-lock"></use></svg> Alterar senha</h3>
+                <p>Atualize a senha de acesso à sua conta</p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Senha atual</label>
+            <input type="password" class="form-input" id="inputSenhaAtual" autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nova senha</label>
+                <input type="password" class="form-input" id="inputNovaSenha" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+            </div>
+            <div class="form-group">
+                <label>Confirmar nova senha</label>
+                <input type="password" class="form-input" id="inputConfirmaSenha" autocomplete="new-password" placeholder="Digite novamente">
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button type="button" class="btn btn-primary" onclick="alterarSenha()"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar nova senha</button>
+        </div>
+    </div>
+
+    <div class="config-card">
+        <div class="config-card-header">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-note"></use></svg> Feedback</h3>
+                <p>Sua opinião ajuda a melhorar o SIOE</p>
+            </div>
+        </div>
+        <p style="color:var(--txt-3); font-size:14px; margin-bottom:18px;">Encontrou um problema, tem uma sugestão ou quer elogiar? Conte pra gente.</p>
+        <div class="action-buttons">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('modalFeedback').classList.add('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-note"></use></svg> Enviar feedback</button>
+        </div>
+    </div>
+
+    <div class="danger-zone">
+        <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-shield"></use></svg> Seus dados</h3>
+        <p>Baixe uma cópia de tudo que você registrou ou remova sua conta permanentemente.</p>
+        <div class="danger-item">
+            <div class="danger-item-info">
+                <h4>Exportar meus dados</h4>
+                <p>Download em JSON de matérias, cronograma, metas e preferências.</p>
+            </div>
+            <a class="btn btn-ghost" href="{% url 'core:exportar_dados' %}"><svg class="ico-svg" aria-hidden="true"><use href="#i-download"></use></svg> Baixar dados</a>
+        </div>
+        <div class="danger-item">
+            <div class="danger-item-info">
+                <h4>Excluir minha conta</h4>
+                <p>Remove permanentemente sua conta e todos os dados. Não pode ser desfeito.</p>
+            </div>
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('formExcluirConta').classList.add('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-trash"></use></svg> Excluir conta</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EXCLUIR CONTA -->
+<div class="modal-overlay" id="formExcluirConta">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-alert"></use></svg> Excluir conta</h3>
+            <button class="modal-close" type="button" onclick="document.getElementById('formExcluirConta').classList.remove('active');" aria-label="Fechar"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <p style="color:var(--txt-3); margin-bottom:16px;">Esta ação é permanente. Digite <strong>EXCLUIR</strong> para confirmar.</p>
+        <form method="POST" action="{% url 'core:excluir_conta' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" class="form-input" name="confirmacao" placeholder="EXCLUIR" autocomplete="off" required>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-danger"><svg class="ico-svg" aria-hidden="true"><use href="#i-trash"></use></svg> Excluir minha conta</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('formExcluirConta').classList.remove('active');">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL FEEDBACK -->
+<div class="modal-overlay" id="modalFeedback">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-note"></use></svg> Enviar feedback</h3>
+            <button class="modal-close" type="button" onclick="document.getElementById('modalFeedback').classList.remove('active');" aria-label="Fechar"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <form method="POST" action="{% url 'core:enviar_feedback' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Tipo</label>
+                <select class="form-input" name="tipo">
+                    <option value="sugestao">Sugestão</option>
+                    <option value="bug">Problema</option>
+                    <option value="elogio">Elogio</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>E-mail para contato (opcional)</label>
+                <input type="email" class="form-input" name="email" value="{{ user.email }}">
+            </div>
+            <div class="form-group">
+                <label>Sua mensagem</label>
+                <textarea class="form-input" name="mensagem" rows="4" placeholder="Escreva aqui..." required></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Enviar</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalFeedback').classList.remove('active');">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SOBRE -->
+<div class="config-section" id="sec-sobre">
+    <div class="config-card about-card">
+        <div class="about-logo">
+            <img src="{% static 'core/img/logo.svg' %}" alt="SIOE">
+        </div>
+        <div class="about-name">SIOE</div>
+        <div class="about-version">Versão 1.0.0</div>
+        <p class="about-description">O <strong>Sistema Inteligente de Organização de Estudos</strong> foi criado para ajudar estudantes a organizar suas matérias, cronogramas e metas de estudo de forma eficiente e intuitiva.</p>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName, btn) {
+        document.querySelectorAll('.config-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.config-section').forEach(function(s) { s.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('sec-' + tabName).classList.add('active');
+    }
+
+    function uploadFoto(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('avatar', file);
+        fetch('{% url "core:upload_avatar" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { alert('Foto atualizada!'); window.location.reload(); }
+            else { alert(data.message || 'Erro ao fazer upload.'); }
+        });
+    }
+
+    function salvarPerfil() {
+        const data = {
+            nome: document.getElementById('inputName').value,
+            email: document.getElementById('inputEmail').value,
+            telefone: document.getElementById('inputPhone').value,
+            data_nascimento: document.getElementById('inputBirth').value,
+            instituicao: document.getElementById('inputSchool').value,
+            serie: document.getElementById('inputGrade').value,
+            objetivo: document.getElementById('inputGoal').value,
+        };
+        fetch('{% url "core:configuracoes" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { alert('Perfil salvo!'); }
+            else { alert(data.message || 'Erro ao salvar.'); }
+        });
+    }
+function selectTheme(el, tema) {
+    document.querySelectorAll('.theme-option').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    
+    // Aplicar tema imediatamente em TODO o site
+    document.documentElement.setAttribute('data-theme', tema);
+    document.body.setAttribute('data-theme', tema);
+    localStorage.setItem('sioe_tema', tema);
+    
+    const corAtiva = document.querySelector('.color-option.active');
+    const cor = corAtiva ? corAtiva.style.background : '#2878FF';
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ tema: tema, cor_primaria: cor })
+    })
+    .then(response => response.json())
+    .then(data => { 
+        if (data.success) { 
+            // Atualizar todas as páginas (opcional)
+            console.log('Tema salvo:', tema);
+        } 
+    });
+}
+    function selectColor(el, cor) {
+    document.querySelectorAll('.color-option').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+    
+    // Atualizar cor imediatamente
+    document.documentElement.style.setProperty('--accent', cor);
+    
+    const temaAtivo = document.querySelector('.theme-option.active');
+    const tema = temaAtivo ? temaAtivo.getAttribute('data-tema') : 'light';
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ tema: tema, cor_primaria: cor })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recarrega: a cor salva passa a valer para ícones e realces de todas as páginas
+            window.location.reload();
+        } else {
+            alert(data.message || 'Erro ao salvar a cor.');
+        }
+    });
+}
+    function alterarSenha() {
+        const data = {
+            old_password: document.getElementById('inputSenhaAtual').value,
+            new_password1: document.getElementById('inputNovaSenha').value,
+            new_password2: document.getElementById('inputConfirmaSenha').value,
+        };
+        fetch('{% url "core:alterar_senha" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(resp => {
+            if (resp.success) {
+                alert(resp.message || 'Senha alterada com sucesso!');
+                document.getElementById('inputSenhaAtual').value = '';
+                document.getElementById('inputNovaSenha').value = '';
+                document.getElementById('inputConfirmaSenha').value = '';
+            } else {
+                alert(resp.message || 'Não foi possível alterar a senha.');
+            }
+        });
+    }
+
+    function salvarTudo() {
+    const corAtiva = document.querySelector('.color-option.active');
+    const cor = corAtiva ? corAtiva.style.background : '#2878FF';
+    const temaAtivo = document.querySelector('.theme-option.active');
+    const tema = temaAtivo ? temaAtivo.getAttribute('data-tema') : 'light';
+    
+    // Aplicar tema imediatamente
+    document.documentElement.setAttribute('data-theme', tema);
+    document.body.setAttribute('data-theme', tema);
+    localStorage.setItem('sioe_tema', tema);
+    
+    const data = {
+        nome: document.getElementById('inputName')?.value || '',
+        email: document.getElementById('inputEmail')?.value || '',
+        telefone: document.getElementById('inputPhone')?.value || '',
+        data_nascimento: document.getElementById('inputBirth')?.value || '',
+        instituicao: document.getElementById('inputSchool')?.value || '',
+        serie: document.getElementById('inputGrade')?.value || '',
+        objetivo: document.getElementById('inputGoal')?.value || '',
+        tema: tema,
+        cor_primaria: cor,
+        notificacoes_email: document.getElementById('inputNotifEmail')?.checked ?? true,
+        notificacoes_push: document.getElementById('inputNotifPush')?.checked ?? true,
+        lembrete_diario: document.getElementById('inputLembreteDiario')?.checked ?? true,
+        alerta_metas_atrasadas: document.getElementById('inputAlertaMetas')?.checked ?? true
+    };
+    
+    fetch('{% url "core:configuracoes" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) { 
+            alert('Configurações salvas!'); 
+            window.location.reload(); 
+        } else { 
+            alert(data.message || 'Erro ao salvar.'); 
+        }
+    });
+}
+   
+    // ===== APLICAR TEMA IMEDIATAMENTE =====
+function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    // Salvar no localStorage para persistência rápida
+    localStorage.setItem('sioe_tema', tema);
+}
+
+// Carregar tema ao entrar na página
+document.addEventListener('DOMContentLoaded', function() {
+    const temaSalvo = localStorage.getItem('sioe_tema') || '{{ config.tema|default:"light" }}';
+    aplicarTema(temaSalvo);
+});
+</script>
+{% endblock %}

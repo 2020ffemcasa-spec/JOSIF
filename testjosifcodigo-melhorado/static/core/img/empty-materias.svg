@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" fill="none" role="img" aria-label="Sem matérias">
+  <defs>
+    <linearGradient id="ebA" x1="40" y1="20" x2="220" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35DDF2"/><stop offset="1" stop-color="#2878FF"/>
+    </linearGradient>
+    <radialGradient id="ebG" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#35DDF2" stop-opacity=".3"/><stop offset="1" stop-color="#35DDF2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="130" cy="95" r="86" fill="url(#ebG)"/>
+  <g>
+    <rect x="56" y="66" width="34" height="96" rx="8" fill="#16233A" stroke="url(#ebA)" stroke-width="3"/>
+    <rect x="98" y="50" width="34" height="112" rx="8" fill="#16233A" stroke="url(#ebA)" stroke-width="3" stroke-opacity=".7"/>
+    <rect x="140" y="78" width="34" height="84" rx="8" fill="#16233A" stroke="url(#ebA)" stroke-width="3" stroke-opacity=".5"/>
+    <path d="M186 60l32 8-16 88-32-8z" fill="#16233A" stroke="url(#ebA)" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <path d="M64 92h18M64 112h18M106 78h18M106 98h18M148 104h18" stroke="#35DDF2" stroke-width="4" stroke-linecap="round" stroke-opacity=".8"/>
+</svg>

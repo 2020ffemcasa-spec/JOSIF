@@ -1,0 +1,408 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Matérias - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Grid de matérias ===== */
+    .subjects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    /* ===== Card da matéria ===== */
+    .subject-card {
+        position: relative;
+        overflow: hidden;
+        padding: 26px 24px 24px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    }
+    .subject-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, rgba(255,255,255,.06), transparent 45%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .subject-card > * { position: relative; z-index: 1; }
+    .subject-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2), 0 0 34px var(--accent-soft);
+    }
+    .subject-card .card-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        z-index: 2;
+    }
+
+    /* Faixas / barras por faixa de progresso */
+    .bar-accent, .progress > .bar-accent {
+        background: var(--accent-grad-full);
+        box-shadow: 0 0 14px var(--accent-soft);
+    }
+    .bar-ok, .progress > .bar-ok {
+        background: var(--ok);
+        box-shadow: 0 0 12px var(--ok);
+    }
+    .bar-warn, .progress > .bar-warn {
+        background: var(--warn);
+        box-shadow: 0 0 12px var(--warn);
+    }
+    .bar-danger, .progress > .bar-danger {
+        background: var(--danger);
+        box-shadow: 0 0 12px var(--danger);
+    }
+
+    /* Cabeçalho do card */
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-top: 6px;
+    }
+    .subject-header h3 {
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--txt);
+    }
+
+    /* Prioridade */
+    .priority {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 13px;
+        border-radius: 99px;
+        border: 1px solid transparent;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .priority.high {
+        background: rgba(229,72,77,.13);
+        border-color: rgba(229,72,77,.35);
+        color: var(--danger);
+    }
+    .priority.medium {
+        background: rgba(238,155,46,.13);
+        border-color: rgba(238,155,46,.35);
+        color: var(--warn);
+    }
+    .priority.low {
+        background: rgba(34,181,115,.13);
+        border-color: rgba(34,181,115,.35);
+        color: var(--ok);
+    }
+
+    /* Linhas de informação */
+    .info {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 10px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--txt-3);
+    }
+    .info .label {
+        display: inline;
+        margin: 0;
+        font-size: inherit;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--txt-2);
+    }
+
+    .progress-box { margin-top: 18px; }
+
+    /* Ações do card */
+    .buttons {
+        margin-top: 22px;
+        display: flex;
+        gap: 10px;
+    }
+    .btn-action {
+        flex: 1;
+        padding: 10px 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all .22s ease;
+    }
+    .btn-edit {
+        background: var(--accent-soft);
+        border-color: var(--stroke-2);
+        color: var(--accent);
+    }
+    .btn-edit:hover { background: var(--panel-2); transform: translateY(-2px); }
+    .btn-delete {
+        background: rgba(229,72,77,.12);
+        border-color: rgba(229,72,77,.35);
+        color: var(--danger);
+    }
+    .btn-delete:hover { background: rgba(229,72,77,.2); transform: translateY(-2px); }
+
+    /* Ações dos modais */
+    .modal-actions { display: flex; gap: 12px; margin-top: 22px; }
+    .modal-actions .btn { flex: 1; }
+
+    @media (max-width: 768px) {
+        .subjects-grid { grid-template-columns: 1fr; }
+        .buttons { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="page-head fade-in">
+    <div>
+        <h1 class="page-title"><span class="emoji"><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg></span> <em>Matérias</em></h1>
+        <p class="page-sub">Organize suas disciplinas, professores, tópicos e o progresso dos seus estudos.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('modal').style.display='flex';"><svg class="ico-svg" aria-hidden="true"><use href="#i-plus"></use></svg> Nova matéria</button>
+    </div>
+</header>
+
+<!-- Lista de matérias -->
+<div class="subjects-grid fade-in">
+    {% if materias %}
+        {% for materia in materias %}
+        <div class="subject-card">
+            {% if materia.progresso >= 80 %}
+                <div class="card-bar bar-ok"></div>
+            {% elif materia.progresso >= 50 %}
+                <div class="card-bar bar-accent"></div>
+            {% elif materia.progresso >= 25 %}
+                <div class="card-bar bar-warn"></div>
+            {% else %}
+                <div class="card-bar bar-danger"></div>
+            {% endif %}
+
+            <div class="subject-header">
+                <h3>{{ materia.emoji|default:"📖" }} {{ materia.nome }}</h3>
+                <span class="priority {{ materia.prioridade }}">{{ materia.get_prioridade_label }}</span>
+            </div>
+            {% if materia.professor %}
+            <div class="info"><svg class="ico-svg" aria-hidden="true"><use href="#i-cap"></use></svg> <span class="label">Professor:</span> {{ materia.professor }}</div>
+            {% endif %}
+            {% if materia.topicos %}
+            <div class="info"><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg> <span class="label">Tópicos:</span> {{ materia.topicos }}</div>
+            {% endif %}
+            {% if materia.carga_horaria %}
+            <div class="info"><svg class="ico-svg" aria-hidden="true"><use href="#i-clock"></use></svg> <span class="label">Carga horária:</span> {{ materia.carga_horaria }}h/semana</div>
+            {% endif %}
+            <div class="progress-box">
+                <div class="progress-top">
+                    <span>Progresso</span>
+                    <span class="percent">{{ materia.progresso }}%</span>
+                </div>
+                <div class="progress">
+                    {% if materia.progresso >= 80 %}
+                        <div class="bar-accent" style="width:{{ materia.progresso }}%;"></div>
+                    {% elif materia.progresso >= 60 %}
+                        <div class="bar-ok" style="width:{{ materia.progresso }}%;"></div>
+                    {% elif materia.progresso >= 40 %}
+                        <div class="bar-warn" style="width:{{ materia.progresso }}%;"></div>
+                    {% else %}
+                        <div class="bar-danger" style="width:{{ materia.progresso }}%;"></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="btn-action btn-edit" onclick="openEditModal({{ materia.id }})"><svg class="ico-svg" aria-hidden="true"><use href="#i-edit"></use></svg> Editar</button>
+                <form method="post" action="{% url 'core:materia_delete' materia.id %}" style="display:contents;" onsubmit="return confirm('Tem certeza que deseja excluir esta matéria? As atividades e metas ligadas a ela também serão removidas.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-delete"><svg class="ico-svg" aria-hidden="true"><use href="#i-trash"></use></svg> Excluir</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            <img src="{% static 'core/img/empty-materias.svg' %}" alt="">
+            <h3>Nenhuma matéria cadastrada</h3>
+            <p>Comece adicionando suas primeiras matérias para organizar seus estudos.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('modal').style.display='flex';"><svg class="ico-svg" aria-hidden="true"><use href="#i-plus"></use></svg> Adicionar Matéria</button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg> Nova Matéria</h3>
+            <button class="modal-close" type="button" aria-label="Fechar" onclick="document.getElementById('modal').style.display='none';"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <form method="POST" action="{% url 'core:materias' %}">
+            {% csrf_token %}
+            <div class="field">
+                <label class="label">Nome da Matéria *</label>
+                <input class="input" type="text" name="nome" placeholder="Ex: Matemática" required>
+            </div>
+            <div class="field">
+                <label class="label">Professor</label>
+                <input class="input" type="text" name="professor" placeholder="Ex: Carlos Silva">
+            </div>
+            <div class="field">
+                <label class="label">Tópicos</label>
+                <textarea class="textarea" name="topicos" rows="3" placeholder="Ex: Álgebra, Geometria..."></textarea>
+            </div>
+            <div class="field">
+                <label class="label">Carga Horária (h/semana)</label>
+                <input class="input" type="number" name="carga_horaria" value="4" min="1">
+            </div>
+            <div class="field">
+                <label class="label">Prioridade</label>
+                <select class="select" name="prioridade">
+                    <option value="high">Alta</option>
+                    <option value="medium" selected>Média</option>
+                    <option value="low">Baixa</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="label">Progresso (%)</label>
+                <input class="input" type="number" name="progresso" value="0" min="0" max="100">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal').style.display='none';"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg> Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal-overlay" id="modalEdit">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-edit"></use></svg> Editar Matéria</h3>
+            <button class="modal-close" type="button" aria-label="Fechar" onclick="document.getElementById('modalEdit').style.display='none';"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <form id="formEditMateria" onsubmit="return salvarEdicao(event)">
+            {% csrf_token %}
+            <input type="hidden" name="materia_id" id="edit_id">
+            <div class="field">
+                <label class="label">Nome da Matéria *</label>
+                <input class="input" type="text" name="nome" id="edit_nome" required>
+            </div>
+            <div class="field">
+                <label class="label">Professor</label>
+                <input class="input" type="text" name="professor" id="edit_professor">
+            </div>
+            <div class="field">
+                <label class="label">Tópicos</label>
+                <textarea class="textarea" name="topicos" id="edit_topicos" rows="3"></textarea>
+            </div>
+            <div class="field">
+                <label class="label">Carga Horária (h/semana)</label>
+                <input class="input" type="number" name="carga_horaria" id="edit_carga_horaria" min="1">
+            </div>
+            <div class="field">
+                <label class="label">Prioridade</label>
+                <select class="select" name="prioridade" id="edit_prioridade">
+                    <option value="high">Alta</option>
+                    <option value="medium">Média</option>
+                    <option value="low">Baixa</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="label">Progresso (%)</label>
+                <input class="input" type="number" name="progresso" id="edit_progresso" min="0" max="100">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalEdit').style.display='none';"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg> Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(id) {
+        fetch(`/materias/edit/${id}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('edit_id').value = data.id;
+                document.getElementById('edit_nome').value = data.nome || '';
+                document.getElementById('edit_professor').value = data.professor || '';
+                document.getElementById('edit_topicos').value = data.topicos || '';
+                document.getElementById('edit_carga_horaria').value = data.carga_horaria || 4;
+                document.getElementById('edit_prioridade').value = data.prioridade || 'medium';
+                document.getElementById('edit_progresso').value = data.progresso || 0;
+                document.getElementById('modalEdit').style.display = 'flex';
+            })
+            .catch(function(error) {
+                alert('Erro ao carregar os dados da matéria.');
+                console.error('Erro:', error);
+            });
+    }
+
+    function salvarEdicao(event) {
+        event.preventDefault();
+        var id = document.getElementById('edit_id').value;
+        var payload = {
+            nome: document.getElementById('edit_nome').value,
+            professor: document.getElementById('edit_professor').value,
+            topicos: document.getElementById('edit_topicos').value,
+            carga_horaria: document.getElementById('edit_carga_horaria').value,
+            prioridade: document.getElementById('edit_prioridade').value,
+            progresso: document.getElementById('edit_progresso').value,
+        };
+        fetch(`/materias/edit/${id}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Erro ao salvar a matéria.');
+            }
+        })
+        .catch(function(error) {
+            alert('Erro ao salvar a matéria.');
+            console.error('Erro:', error);
+        });
+        return false;
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('modalEdit').style.display = 'none';
+        }
+    });
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) { this.style.display = 'none'; }
+    });
+    document.getElementById('modalEdit').addEventListener('click', function(e) {
+        if (e.target === this) { this.style.display = 'none'; }
+    });
+</script>
+{% endblock %}

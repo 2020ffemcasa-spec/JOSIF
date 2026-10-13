@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" fill="none" role="img" aria-label="Sem dados de relatório">
+  <defs>
+    <linearGradient id="erA" x1="40" y1="20" x2="220" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35DDF2"/><stop offset="1" stop-color="#2878FF"/>
+    </linearGradient>
+    <linearGradient id="erFill" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#2878FF" stop-opacity=".45"/><stop offset="1" stop-color="#2878FF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="erG" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#2878FF" stop-opacity=".32"/><stop offset="1" stop-color="#2878FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="130" cy="95" r="86" fill="url(#erG)"/>
+  <rect x="46" y="40" width="168" height="120" rx="18" fill="#16233A" stroke="url(#erA)" stroke-width="3"/>
+  <path d="M46 132h168" stroke="url(#erA)" stroke-width="2.5" stroke-opacity=".4"/>
+  <path d="M72 122l30-30 26 18 32-42 34 26v28H72z" fill="url(#erFill)"/>
+  <path d="M72 122l30-30 26 18 32-42 34 26" stroke="url(#erA)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g fill="#35DDF2">
+    <circle cx="72" cy="122" r="5"/><circle cx="128" cy="110" r="5"/><circle cx="160" cy="68" r="5"/><circle cx="194" cy="94" r="5"/>
+  </g>
+</svg>

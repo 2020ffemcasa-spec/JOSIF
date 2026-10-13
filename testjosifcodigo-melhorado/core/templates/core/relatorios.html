@@ -1,0 +1,840 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Relatórios - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    a.period-btn, a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .dist-sub { font-size: 11.5px; color: var(--txt-3); margin: -4px 0 8px 18px; }
+    @media print {
+        .sidebar, .topbar, .scrim, .bg-fx, .page-actions, .period-filter, .modal-overlay { display: none !important; }
+        .main { margin-left: 0 !important; max-width: none !important; padding: 0 !important; }
+        .fade-in { animation: none !important; }
+    }
+    /* =========================================================
+       RELATÓRIOS — design system "Neon Future"
+       ========================================================= */
+
+    /* Compatibilidade com a topbar antiga (agora só o wrapper de ações) */
+    .relatorios .topbar {
+        display: flex;
+        position: static;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        z-index: auto;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: 0;
+    }
+
+    /* Botão de exportar */
+    .relatorios .btn-export {
+        background: var(--accent-grad-full);
+        border-color: transparent;
+        color: var(--accent-contrast);
+        box-shadow: 0 10px 26px var(--accent-soft);
+    }
+    .relatorios .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px var(--accent-soft);
+    }
+
+    /* ---------- Filtro de período ---------- */
+    .period-filter {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+        padding: 7px 10px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .period-btn {
+        padding: 8px 18px;
+        border: 1px solid transparent;
+        border-radius: 99px;
+        background: transparent;
+        color: var(--txt-2);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .22s ease;
+    }
+    .period-btn:hover {
+        background: var(--panel-2);
+        border-color: var(--stroke-2);
+        color: var(--txt);
+        transform: translateY(-2px);
+    }
+    .period-btn.active {
+        background: var(--accent-grad-full);
+        border-color: transparent;
+        color: var(--accent-contrast);
+        box-shadow: 0 8px 22px var(--accent-soft);
+    }
+
+    /* ---------- Cards de resumo ---------- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+        padding: 22px 24px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all .3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2), 0 0 30px var(--accent-soft);
+    }
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+    }
+    .stat-blue::before { background: linear-gradient(90deg, var(--info), var(--accent-2)); }
+    .stat-green::before { background: linear-gradient(90deg, var(--ok), rgba(34,181,115,.35)); }
+    .stat-orange::before { background: linear-gradient(90deg, var(--warn), rgba(238,155,46,.35)); }
+    .stat-purple::before { background: linear-gradient(90deg, rgba(53,221,242,.95), rgba(53,221,242,.35)); }
+
+    .stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        font-size: 21px;
+        border-radius: 14px;
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+    }
+    .stat-trend {
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 99px;
+        letter-spacing: .02em;
+    }
+    .trend-up { background: rgba(34,181,115,.13); border: 1px solid rgba(34,181,115,.32); color: var(--ok); }
+    .trend-down { background: rgba(229,72,77,.13); border: 1px solid rgba(229,72,77,.32); color: var(--danger); }
+
+    .stat-value {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -.02em;
+        color: var(--txt);
+    }
+    .stat-value .accent { color: var(--accent); }
+    .stat-label {
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--txt-3);
+    }
+
+    /* ---------- Gráficos ---------- */
+    .charts-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 22px;
+        margin-bottom: 28px;
+    }
+    .chart-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 24px 26px;
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all .3s ease;
+    }
+    .chart-card:hover {
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2);
+    }
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+    .chart-header h3 {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--txt);
+    }
+    .chart-header span {
+        font-size: 12px;
+        color: var(--txt-3);
+        text-align: right;
+    }
+
+    .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        height: 200px;
+        padding-top: 10px;
+    }
+    .bar-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+        justify-content: flex-end;
+    }
+    .bar {
+        width: 100%;
+        max-width: 42px;
+        min-height: 4px;
+        border-radius: 8px 8px 4px 4px;
+        background: var(--accent-grad-full);
+        box-shadow: 0 0 18px var(--accent-soft);
+        transition: all .5s ease;
+    }
+    .bar:hover {
+        transform: scaleY(1.04);
+        transform-origin: bottom;
+        box-shadow: 0 0 26px var(--accent-2);
+    }
+    .bar-value {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--txt);
+        text-align: center;
+    }
+    .bar-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--txt-3);
+        text-align: center;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--txt-3);
+    }
+    .no-data span {
+        display: block;
+        font-size: 44px;
+        margin-bottom: 12px;
+    }
+    .no-data p { font-size: 14.5px; }
+    .bar-chart .no-data {
+        flex: 1;
+        align-self: center;
+        padding: 20px;
+    }
+
+    /* Distribuição por matéria */
+    .dist-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 0;
+    }
+    .dist-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .dist-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        flex-shrink: 0;
+        box-shadow: 0 0 10px var(--accent-soft);
+    }
+    .dist-name {
+        flex: 1;
+        font-size: 13.5px;
+        color: var(--txt);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .dist-pct {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--txt);
+    }
+    .dist-track {
+        width: 100%;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .dist-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width .5s ease;
+        box-shadow: 0 0 10px var(--accent-soft);
+    }
+
+    /* ---------- Ranking ---------- */
+    .ranking-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 24px 26px;
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        margin-bottom: 28px;
+        transition: all .3s ease;
+    }
+    .ranking-card:hover {
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2);
+    }
+    .ranking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .ranking-header h3 {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--txt);
+    }
+    .ranking-header span {
+        font-size: 12px;
+        color: var(--txt-3);
+    }
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        margin-bottom: 10px;
+        transition: all .25s ease;
+    }
+    .ranking-item:hover {
+        transform: translateX(4px);
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-1);
+    }
+    .ranking-position {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--accent-contrast);
+        flex-shrink: 0;
+    }
+    .ranking-position.pos-1 {
+        background: linear-gradient(135deg, var(--warn), rgba(238,155,46,.6));
+        box-shadow: 0 0 16px rgba(238,155,46,.35);
+    }
+    .ranking-position.pos-2 {
+        background: linear-gradient(135deg, var(--txt-3), var(--txt-2));
+        color: var(--panel-solid);
+        box-shadow: 0 0 14px rgba(148,163,184,.3);
+    }
+    .ranking-position.pos-3 {
+        background: linear-gradient(135deg, var(--warn), var(--danger));
+        box-shadow: 0 0 14px rgba(229,72,77,.3);
+    }
+    .ranking-position.pos-other {
+        background: var(--panel);
+        border: 1px solid var(--stroke-2);
+        color: var(--txt-2);
+    }
+
+    .ranking-info { flex: 1; min-width: 0; }
+    .ranking-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--txt);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .ranking-detail { font-size: 12px; color: var(--txt-3); }
+
+    .ranking-progress { width: 100px; flex-shrink: 0; }
+    .ranking-progress-bar {
+        width: 100%;
+        height: 6px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .ranking-progress-bar div {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1.2s ease;
+        box-shadow: 0 0 10px var(--accent-soft);
+    }
+
+    .ranking-score { text-align: right; flex-shrink: 0; }
+    .ranking-score-value {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--txt);
+    }
+    .ranking-score-label {
+        font-size: 11px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--txt-3);
+    }
+
+    .ranking-empty {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--txt-3);
+    }
+    .ranking-empty .empty-icon {
+        font-size: 36px;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    /* ---------- Histórico ---------- */
+    .history-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        margin-bottom: 28px;
+    }
+    .history-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 24px 26px;
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all .3s ease;
+    }
+    .history-card:hover {
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2);
+    }
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    .history-header h3 {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--txt);
+    }
+    .history-header span {
+        font-size: 12px;
+        color: var(--txt-3);
+    }
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--panel-2);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        margin-bottom: 8px;
+        transition: all .25s ease;
+    }
+    .history-item:hover {
+        transform: translateX(3px);
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-1);
+    }
+    .history-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+    }
+    .hi-blue {
+        background: var(--accent-soft);
+        border-color: rgba(53,221,242,.3);
+        box-shadow: 0 0 14px var(--accent-soft);
+    }
+    .history-text { flex: 1; min-width: 0; }
+    .history-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .history-subtitle { font-size: 12px; color: var(--txt-3); }
+    .history-time {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border: 1px solid var(--stroke);
+        border-radius: 8px;
+        padding: 4px 8px;
+        white-space: nowrap;
+    }
+
+    .history-empty {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--txt-3);
+    }
+    .history-empty .empty-icon {
+        font-size: 36px;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    /* ---------- Estado vazio ---------- */
+    .empty-state-container {
+        background: var(--panel);
+        border: 1px dashed var(--stroke-2);
+        border-radius: var(--r-xl);
+        padding: 48px 30px;
+        text-align: center;
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        margin-bottom: 28px;
+    }
+    .empty-state-container img {
+        display: block;
+        width: 220px;
+        max-width: 70%;
+        height: auto;
+        margin: 0 auto 16px;
+        opacity: .95;
+    }
+    .empty-state-container .empty-icon {
+        font-size: 52px;
+        display: block;
+        margin-bottom: 16px;
+    }
+    .empty-state-container h3 {
+        font-size: 21px;
+        font-weight: 700;
+        color: var(--txt);
+        margin-bottom: 8px;
+    }
+    .empty-state-container p {
+        font-size: 15px;
+        color: var(--txt-3);
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    /* ---------- Resumo ---------- */
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--stroke);
+        font-size: 14px;
+        color: var(--txt-2);
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-item strong {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    /* ---------- Responsivo ---------- */
+    @media (max-width: 1100px) {
+        .charts-row { grid-template-columns: 1fr; }
+        .history-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 800px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .stat-card { padding: 18px 16px; }
+        .stat-value { font-size: 24px; }
+        .period-filter { padding: 5px 8px; gap: 4px; }
+        .period-btn { padding: 6px 14px; font-size: 12px; }
+        .ranking-progress { width: 70px; }
+        .ranking-item { flex-wrap: wrap; gap: 10px; }
+    }
+    @media (max-width: 550px) {
+        .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-value { font-size: 20px; }
+        .stat-icon { width: 36px; height: 36px; font-size: 17px; }
+        .period-filter {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .period-btn { white-space: nowrap; font-size: 11px; padding: 5px 12px; }
+        .chart-card { padding: 18px 16px; }
+        .ranking-card { padding: 18px 16px; }
+        .history-card { padding: 18px 16px; }
+        .bar-chart { height: 150px; gap: 10px; }
+        .bar { max-width: 30px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="relatorios">
+
+    <!-- Cabeçalho -->
+    <header class="page-head fade-in">
+        <div>
+            <h1 class="page-title"><span class="emoji"><svg class="ico-svg" aria-hidden="true"><use href="#i-trending-up"></use></svg></span> <em>Relatórios</em></h1>
+            <p class="page-sub">Acompanhe as horas das atividades que você concluiu no cronograma, seu progresso e o desempenho por matéria.</p>
+        </div>
+        <div class="page-actions">
+            <button type="button" class="btn btn-primary btn-export" onclick="window.print()"><svg class="ico-svg" aria-hidden="true"><use href="#i-download"></use></svg> Exportar PDF</button>
+        </div>
+    </header>
+
+    <!-- Filtro de Período -->
+    <nav class="period-filter fade-in" aria-label="Filtro de período">
+        <a class="period-btn{% if periodo == 'hoje' %} active{% endif %}" href="?periodo=hoje">Hoje</a>
+        <a class="period-btn{% if periodo == 'semana' %} active{% endif %}" href="?periodo=semana">Esta Semana</a>
+        <a class="period-btn{% if periodo == 'mes' %} active{% endif %}" href="?periodo=mes">Este Mês</a>
+        <a class="period-btn{% if periodo == 'ult_mes' %} active{% endif %}" href="?periodo=ult_mes">Últimos 60 dias</a>
+        <a class="period-btn{% if periodo == 'tudo' %} active{% endif %}" href="?periodo=tudo">Todo o Período</a>
+    </nav>
+
+    <!-- Cards de Resumo -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card stat-blue">
+            <div class="stat-top">
+                <div class="stat-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-clock"></use></svg></div>
+            </div>
+            <div class="stat-value">{{ horas_estudadas|default:"0" }}<span class="accent">h</span></div>
+            <div class="stat-label">Horas Estudadas <span style="font-weight:400;">({% if periodo == "hoje" %}hoje{% elif periodo == "semana" %}7 dias{% elif periodo == "mes" %}30 dias{% elif periodo == "ult_mes" %}60 dias{% else %}total{% endif %})</span></div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-top">
+                <div class="stat-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-check-circle"></use></svg></div>
+            </div>
+            <div class="stat-value">{{ atividades_concluidas|default:0 }}</div>
+            <div class="stat-label">Atividades Concluídas <span style="font-weight:400;">(+ metas)</span></div>
+        </div>
+        <div class="stat-card stat-orange">
+            <div class="stat-top">
+                <div class="stat-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg></div>
+            </div>
+            <div class="stat-value">{{ progresso_medio|default:0 }}<span class="accent">%</span></div>
+            <div class="stat-label">Progresso Médio</div>
+        </div>
+        <div class="stat-card stat-purple">
+            <div class="stat-top">
+                <div class="stat-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg></div>
+            </div>
+            <div class="stat-value">{{ total_materias|default:0 }}</div>
+            <div class="stat-label">Matérias Cadastradas</div>
+        </div>
+    </div>
+
+    <!-- Mensagem para novos usuários -->
+    {% if total_materias == 0 %}
+    <div class="empty-state-container fade-in">
+        <img src="{% static 'core/img/empty-relatorios.svg' %}" alt="">
+        <h3>Seus relatórios começarão aqui</h3>
+        <p>Complete suas primeiras atividades de estudo e acompanhe seu progresso com gráficos detalhados.</p>
+    </div>
+    {% endif %}
+
+    <!-- Gráficos -->
+    <div class="charts-row fade-in">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-trending-up"></use></svg> Horas de Estudo por Dia</h3>
+                <span>Últimos 7 dias</span>
+            </div>
+            <div class="bar-chart" role="img" aria-label="Horas estudadas por dia nos últimos 7 dias">
+                {% for g in grafico %}
+                <div class="bar-group">
+                    <div class="bar-value">{{ g.horas|floatformat:"-1" }}h</div>
+                    <div class="bar" style="height: {{ g.pct }}%;{% if g.eh_hoje %} box-shadow: 0 0 26px var(--accent-2);{% endif %}"></div>
+                    <div class="bar-label">{{ g.dia }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-bar-chart"></use></svg> Distribuição por Matéria</h3>
+                <span>Total: {{ horas_estudadas|default:"0" }}h</span>
+            </div>
+            {% if distribuicao %}
+            <div class="dist-list">
+                {% for d in distribuicao|slice:":8" %}
+                <div class="dist-row">
+                    <span class="dist-dot" style="background:{{ d.cor }};"></span>
+                    <span class="dist-name">{{ d.emoji|default:"📖" }} {{ d.nome }}</span>
+                    <span class="dist-pct">{{ d.pct }}%</span>
+                </div>
+                <div class="dist-sub">{{ d.minutos }} min</div>
+                <div class="dist-track">
+                    <div class="dist-fill" style="width:{{ d.pct }}%; background:{{ d.cor }};"></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-data">
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-bar-chart"></use></svg></span>
+                <p>Nenhuma atividade concluída neste período.<br>Conclua atividades no cronograma para ver as horas aqui.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ranking de Matérias -->
+    <div class="ranking-card fade-in">
+        <div class="ranking-header">
+            <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-award"></use></svg> Ranking de Desempenho</h3>
+            <span>Ordenado por progresso</span>
+        </div>
+        {% if materias %}
+            {% for materia in materias %}
+            <div class="ranking-item">
+                <div class="ranking-position 
+                    {% if forloop.counter == 1 %}pos-1
+                    {% elif forloop.counter == 2 %}pos-2
+                    {% elif forloop.counter == 3 %}pos-3
+                    {% else %}pos-other{% endif %}">
+                    {{ forloop.counter }}
+                </div>
+                <div class="ranking-info">
+                    <div class="ranking-name">{{ materia.emoji|default:"📖" }} {{ materia.nome }}</div>
+                    <div class="ranking-detail">{{ materia.carga_horaria|default:"0" }}h/semana</div>
+                </div>
+                <div class="ranking-progress">
+                    <div class="ranking-progress-bar">
+                        <div style="width:{{ materia.progresso|default:0 }}%;background:{{ materia.get_progresso_color|default:'#2878FF' }}"></div>
+                    </div>
+                </div>
+                <div class="ranking-score">
+                    <div class="ranking-score-value">{{ materia.progresso|default:0 }}%</div>
+                    <div class="ranking-score-label">progresso</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="ranking-empty">
+                <span class="empty-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-award"></use></svg></span>
+                <p>Nenhuma matéria cadastrada ainda.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Histórico -->
+    <div class="history-row fade-in">
+        <div class="history-card">
+            <div class="history-header">
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-calendar"></use></svg> Concluídas Recentemente</h3>
+                <span>Atividades do cronograma</span>
+            </div>
+            {% if registros_recentes %}
+                {% for registro in registros_recentes %}
+                <div class="history-item">
+                    <div class="history-icon hi-blue"><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg></div>
+                    <div class="history-text">
+                        <div class="history-title">{{ registro.titulo }}</div>
+                        <div class="history-subtitle">{{ registro.materia }} · {{ registro.minutos }}min · {{ registro.data|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="history-time">{{ registro.hora_inicio|time:"H:i" }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="history-empty">
+                    <span class="empty-icon"><svg class="ico-svg" aria-hidden="true"><use href="#i-clock"></use></svg></span>
+                    <p>Nenhuma atividade concluída no período.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="history-card">
+            <div class="history-header">
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-bar-chart"></use></svg> Resumo do período</h3>
+                <span>Dados gerais</span>
+            </div>
+            <div class="summary-item">
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-book"></use></svg> Matérias estudadas</span>
+                <strong>{{ materias_estudadas|default:0 }}</strong>
+            </div>
+            <div class="summary-item">
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-check-circle"></use></svg> Atividades concluídas</span>
+                <strong>{{ atividades_concluidas|default:0 }}</strong>
+            </div>
+            <div class="summary-item">
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg> Progresso médio</span>
+                <strong>{{ progresso_medio|default:0 }}%</strong>
+            </div>
+            <div class="summary-item">
+                <span><svg class="ico-svg" aria-hidden="true"><use href="#i-clock"></use></svg> Horas de estudo (concluídas)</span>
+                <strong>{{ horas_estudadas|default:"0" }}h</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

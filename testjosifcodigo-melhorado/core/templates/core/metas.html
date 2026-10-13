@@ -1,0 +1,454 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Metas - SIOE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Grid de metas ===== */
+    .goals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    /* ===== Card da meta ===== */
+    .goal-card {
+        position: relative;
+        overflow: hidden;
+        padding: 26px 24px 24px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    }
+    .goal-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, rgba(255,255,255,.06), transparent 45%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .goal-card > * { position: relative; z-index: 1; }
+    .goal-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--stroke-2);
+        box-shadow: var(--sh-2), 0 0 34px var(--accent-soft);
+    }
+    .goal-card .card-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+        z-index: 2;
+    }
+    .goal-card .card-bar.on-track { background: var(--ok); }
+    .goal-card .card-bar.at-risk { background: var(--warn); }
+    .goal-card .card-bar.behind { background: var(--danger); }
+    .goal-card .card-bar.completed { background: var(--ok); }
+
+    /* Faixas / barras de progresso */
+    .bar-ok, .progress > .bar-ok {
+        background: var(--ok);
+        box-shadow: 0 0 12px var(--ok);
+    }
+    .bar-warn, .progress > .bar-warn {
+        background: var(--warn);
+        box-shadow: 0 0 12px var(--warn);
+    }
+    .bar-danger, .progress > .bar-danger {
+        background: var(--danger);
+        box-shadow: 0 0 12px var(--danger);
+    }
+
+    /* Cabeçalho do card */
+    .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-top: 6px;
+    }
+    .goal-header h3 {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--txt);
+    }
+
+    /* Badge de status */
+    .goal-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 13px;
+        border-radius: 99px;
+        border: 1px solid transparent;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .goal-badge.on-track {
+        background: rgba(34,181,115,.13);
+        border-color: rgba(34,181,115,.35);
+        color: var(--ok);
+    }
+    .goal-badge.at-risk {
+        background: rgba(238,155,46,.13);
+        border-color: rgba(238,155,46,.35);
+        color: var(--warn);
+    }
+    .goal-badge.behind {
+        background: rgba(229,72,77,.13);
+        border-color: rgba(229,72,77,.35);
+        color: var(--danger);
+    }
+    .goal-badge.completed {
+        background: rgba(34,181,115,.13);
+        border-color: rgba(34,181,115,.35);
+        color: var(--ok);
+    }
+
+    /* Metadados */
+    .goal-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 22px;
+        margin-bottom: 16px;
+        padding: 12px 0;
+        border-top: 1px solid var(--stroke);
+        border-bottom: 1px solid var(--stroke);
+    }
+    .goal-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--txt-3);
+    }
+    .goal-meta-item strong { color: var(--txt); font-weight: 600; }
+    .goal-description {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--txt-2);
+        margin-bottom: 16px;
+    }
+
+    .progress-box { margin-top: 4px; }
+
+    /* Ações do card */
+    .goal-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .btn-action {
+        flex: 1;
+        padding: 10px 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all .22s ease;
+    }
+    .btn-edit {
+        background: var(--accent-soft);
+        border-color: var(--stroke-2);
+        color: var(--accent);
+    }
+    .btn-edit:hover { background: var(--panel-2); transform: translateY(-2px); }
+    .btn-delete {
+        background: rgba(229,72,77,.12);
+        border-color: rgba(229,72,77,.35);
+        color: var(--danger);
+    }
+    .btn-delete:hover { background: rgba(229,72,77,.2); transform: translateY(-2px); }
+
+    /* Filtros (pílulas no estilo dos chips) */
+    .filter-row { margin-bottom: 22px; }
+    .filter-btn {
+        padding: 9px 16px;
+        border-radius: 99px;
+        border: 1px solid var(--stroke);
+        background: var(--panel);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt-2);
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+    .filter-btn:hover {
+        border-color: var(--stroke-2);
+        color: var(--txt);
+        transform: translateY(-2px);
+    }
+    .filter-btn.active {
+        background: var(--accent-grad-full);
+        border-color: transparent;
+        color: var(--accent-contrast);
+        box-shadow: 0 8px 22px rgba(53,221,242,.25);
+    }
+
+    /* Ações dos modais */
+    .modal-actions { display: flex; gap: 12px; margin-top: 22px; }
+    .modal-actions .btn { flex: 1; }
+    .form-row .field { margin-bottom: 0; }
+
+    @media (max-width: 768px) {
+        .goals-grid { grid-template-columns: 1fr; }
+        .filter-btn { padding: 7px 14px; font-size: 12px; }
+        .goal-actions { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="page-head fade-in">
+    <div>
+        <h1 class="page-title"><span class="emoji"><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg></span> <em>Metas</em></h1>
+        <p class="page-sub">Defina objetivos de estudo, prazos e acompanhe o progresso de cada meta.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('modalCriar').classList.add('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-plus"></use></svg> Criar Meta</button>
+    </div>
+</header>
+
+<!-- Filtros -->
+<div class="chips filter-row fade-in">
+    <button class="filter-btn active" onclick="filterMetas('all', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-list"></use></svg> Todas</button>
+    <button class="filter-btn" onclick="filterMetas('on-track', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-check-circle"></use></svg> No Caminho</button>
+    <button class="filter-btn" onclick="filterMetas('at-risk', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-alert"></use></svg> Em Risco</button>
+    <button class="filter-btn" onclick="filterMetas('behind', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-alert"></use></svg> Atrasadas</button>
+    <button class="filter-btn" onclick="filterMetas('completed', this)"><svg class="ico-svg" aria-hidden="true"><use href="#i-check-circle"></use></svg> Concluídas</button>
+</div>
+
+<!-- Lista de Metas -->
+<div class="goals-grid fade-in" id="goalsGrid">
+    {% if metas %}
+        {% for meta in metas %}
+        <div class="goal-card" data-status="{{ meta.status }}" data-id="{{ meta.id }}">
+            <div class="card-bar {{ meta.status }}"></div>
+            <div class="goal-header">
+                <h3>{{ meta.titulo }}</h3>
+                <span class="goal-badge {{ meta.status }}">{{ meta.get_status_display }}</span>
+            </div>
+            <div class="goal-meta">
+                <span class="goal-meta-item"><svg class="ico-svg" aria-hidden="true"><use href="#i-calendar"></use></svg> <strong>Prazo:</strong> {{ meta.prazo|default:"Não definido" }}</span>
+                <span class="goal-meta-item"><svg class="ico-svg" aria-hidden="true"><use href="#i-bar-chart"></use></svg> <strong>Meta:</strong> {{ meta.meta_progresso }}%</span>
+            </div>
+            {% if meta.descricao %}
+            <p class="goal-description">{{ meta.descricao }}</p>
+            {% endif %}
+            <div class="progress-box">
+                <div class="progress-top">
+                    <span>Progresso</span>
+                    <span class="percent">{{ meta.progresso_atual }}%</span>
+                </div>
+                <div class="progress">
+                    {% if meta.progresso_atual >= meta.meta_progresso %}
+                        <div class="bar-ok" style="width:{{ meta.progresso_atual }}%;"></div>
+                    {% elif meta.progresso_atual >= meta.meta_progresso|add:"-30" %}
+                        <div class="bar-ok" style="width:{{ meta.progresso_atual }}%;"></div>
+                    {% elif meta.progresso_atual >= meta.meta_progresso|add:"-50" %}
+                        <div class="bar-warn" style="width:{{ meta.progresso_atual }}%;"></div>
+                    {% else %}
+                        <div class="bar-danger" style="width:{{ meta.progresso_atual }}%;"></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="goal-actions">
+                <button class="btn-action btn-edit" onclick="openEditModal({{ meta.id }})"><svg class="ico-svg" aria-hidden="true"><use href="#i-edit"></use></svg> Editar</button>
+                <form method="post" action="{% url 'core:meta_delete' meta.id %}" style="display:contents;" onsubmit="return confirm('Tem certeza que deseja excluir esta meta?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-delete"><svg class="ico-svg" aria-hidden="true"><use href="#i-trash"></use></svg> Excluir</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            <img src="{% static 'core/img/empty-metas.svg' %}" alt="">
+            <h3>Nenhuma meta definida</h3>
+            <p>Defina suas primeiras metas de estudo para acompanhar seu progresso.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('modalCriar').classList.add('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-plus"></use></svg> Criar Meta</button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- MODAL CRIAR -->
+<div class="modal-overlay" id="modalCriar">
+    <div class="modal-box">
+        <div class="modal-head">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-target"></use></svg> Nova Meta</h3>
+                <p class="page-sub">Preencha os dados para criar uma nova meta.</p>
+            </div>
+            <button class="modal-close" type="button" aria-label="Fechar" onclick="document.getElementById('modalCriar').classList.remove('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <form method="POST" action="{% url 'core:metas' %}">
+            {% csrf_token %}
+            <div class="field">
+                <label class="label">Título da Meta *</label>
+                <input class="input" type="text" name="titulo" placeholder="Ex: Matemática - ENEM" required>
+            </div>
+            <div class="field">
+                <label class="label">Matéria</label>
+                <select class="select" name="materia">
+                    <option value="">Selecione uma matéria</option>
+                    {% for materia in materias %}
+                    <option value="{{ materia.id }}">{{ materia.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label class="label">Descrição</label>
+                <textarea class="textarea" name="descricao" rows="3" placeholder="Descreva os objetivos..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label class="label">Meta (%)</label>
+                    <input class="input" type="number" name="meta_progresso" value="80" min="1" max="100">
+                </div>
+                <div class="field">
+                    <label class="label">Progresso Atual (%)</label>
+                    <input class="input" type="number" name="progresso_atual" value="0" min="0" max="100">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Prazo</label>
+                <input class="input" type="date" name="prazo">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalCriar').classList.remove('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg> Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalEditar">
+    <div class="modal-box">
+        <div class="modal-head">
+            <div>
+                <h3><svg class="ico-svg" aria-hidden="true"><use href="#i-edit"></use></svg> Editar Meta</h3>
+                <p class="page-sub">Atualize as informações da sua meta.</p>
+            </div>
+            <button class="modal-close" type="button" aria-label="Fechar" onclick="document.getElementById('modalEditar').classList.remove('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg></button>
+        </div>
+        <form method="POST" id="formEditar">
+            {% csrf_token %}
+            <input type="hidden" name="meta_id" id="editMetaId">
+
+            <div class="field">
+                <label class="label">Título da Meta *</label>
+                <input class="input" type="text" name="titulo" id="editTitulo" placeholder="Ex: Matemática - ENEM" required>
+            </div>
+            <div class="field">
+                <label class="label">Matéria</label>
+                <select class="select" name="materia" id="editMateria">
+                    <option value="">Selecione uma matéria</option>
+                    {% for materia in materias %}
+                    <option value="{{ materia.id }}">{{ materia.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label class="label">Descrição</label>
+                <textarea class="textarea" name="descricao" id="editDescricao" rows="3" placeholder="Descreva os objetivos..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label class="label">Meta (%)</label>
+                    <input class="input" type="number" name="meta_progresso" id="editMetaProgresso" min="1" max="100">
+                </div>
+                <div class="field">
+                    <label class="label">Progresso Atual (%)</label>
+                    <input class="input" type="number" name="progresso_atual" id="editProgressoAtual" min="0" max="100">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Prazo</label>
+                <input class="input" type="date" name="prazo" id="editPrazo">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary"><svg class="ico-svg" aria-hidden="true"><use href="#i-save"></use></svg> Salvar Alterações</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalEditar').classList.remove('active');"><svg class="ico-svg" aria-hidden="true"><use href="#i-close"></use></svg> Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterMetas(status, btn) {
+        document.querySelectorAll('.filter-btn').forEach(function(f) {
+            f.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        document.querySelectorAll('.goal-card').forEach(function(card) {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function openEditModal(metaId) {
+        // Buscar os dados da meta via AJAX
+        fetch(`/metas/edit/${metaId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editMetaId').value = metaId;
+                document.getElementById('editTitulo').value = data.titulo || '';
+                document.getElementById('editMateria').value = data.materia || '';
+                document.getElementById('editDescricao').value = data.descricao || '';
+                document.getElementById('editMetaProgresso').value = data.meta_progresso || 80;
+                document.getElementById('editProgressoAtual').value = data.progresso_atual || 0;
+                document.getElementById('editPrazo').value = data.prazo || '';
+
+                // Mudar a action do formulário
+                document.getElementById('formEditar').action = `/metas/edit/${metaId}/`;
+
+                document.getElementById('modalEditar').classList.add('active');
+            })
+            .catch(error => {
+                alert('Erro ao carregar os dados da meta.');
+                console.error('Erro:', error);
+            });
+    }
+
+    // Fechar modais com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modalCriar').classList.remove('active');
+            document.getElementById('modalEditar').classList.remove('active');
+        }
+    });
+
+    // Fechar modais clicando fora
+    document.getElementById('modalCriar').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+    document.getElementById('modalEditar').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}
